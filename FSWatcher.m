@@ -10,10 +10,28 @@
 
 @implementation FSWatcher {
 	FSEventStreamRef eeventStream;
+	BOOL observeFiles;
 }
 
 
 @synthesize trackedPaths;
+
+
+/*
+ Initializer
+ */
+- (id) init {
+	if (self = [super init]) {
+		observeFiles = TRUE;
+	}
+	return self;
+}
+
+
+- (void) shouldObserveFiles: (BOOL) b {
+	observeFiles = b;
+	[self setPaths: trackedPaths];
+}
 
 /*
  Stops, releases, recreates and restarts the FSEventStream
@@ -33,11 +51,19 @@
 		return;
 	}
 	
+	// Switch between "Observe folders only" / "Observe Files and Folders"
+	int flags;
+	if (observeFiles) {
+		flags = kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagWatchRoot|kFSEventStreamCreateFlagFileEvents;
+	} else {
+		flags = kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagWatchRoot;
+	}
+	
 	// Recreate the FSEventStream
 	trackedPaths = paths;
 	CFTimeInterval latency = 0.2;
 	FSEventStreamContext context = {0,(__bridge void *)self,NULL,NULL,NULL};
-	eeventStream = FSEventStreamCreate(kCFAllocatorDefault,&callback,&context,(__bridge CFArrayRef)trackedPaths,kFSEventStreamEventIdSinceNow,latency,kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagWatchRoot|kFSEventStreamCreateFlagFileEvents);
+	eeventStream = FSEventStreamCreate(kCFAllocatorDefault,&callback,&context,(__bridge CFArrayRef)trackedPaths,kFSEventStreamEventIdSinceNow,latency, flags);
 	
 	// Restart the FSEventStream
 	[self startWatching];
@@ -93,20 +119,20 @@ static void callback(ConstFSEventStreamRef streamRef,
 		
 		if ( eventFlags[i] & kFSEventStreamEventFlagItemIsDir ) {
 			NSURL * u = [NSURL fileURLWithPath:[paths objectAtIndex:i] isDirectory:YES];
-			[[NSNotificationCenter defaultCenter] postNotificationName:@"fsWatcherEvent" object:u];
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"fsWatcherEventIsDir" object:u];
 
 		} else if (eventFlags[i] & kFSEventStreamEventFlagItemIsFile) {
 			// Filter out .DS_Store Files
 			if (![[[paths objectAtIndex:i] lastPathComponent] isEqualToString:@".DS_Store"]) {
 				NSURL * u = [NSURL fileURLWithPath:[paths objectAtIndex:i] isDirectory:NO];
-				[[NSNotificationCenter defaultCenter] postNotificationName:@"fsWatcherEvent" object:u];
+				[[NSNotificationCenter defaultCenter] postNotificationName:@"fsWatcherEventIsFile" object:u];
 			}
 			
 		} else if (eventFlags[i] & kFSEventStreamEventFlagItemIsSymlink) {
 				// Filter out .DS_Store Files
 				if (![[[paths objectAtIndex:i] lastPathComponent] isEqualToString:@".DS_Store"]) {
 					NSURL * u = [NSURL fileURLWithPath:[paths objectAtIndex:i]];
-					[[NSNotificationCenter defaultCenter] postNotificationName:@"fsWatcherEvent" object:u];
+					[[NSNotificationCenter defaultCenter] postNotificationName:@"fsWatcherEventIsSymlink" object:u];
 				}
 				
 		} else if ( eventFlags[i] & kFSEventStreamEventFlagMustScanSubDirs ) {

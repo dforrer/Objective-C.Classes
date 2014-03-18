@@ -5,13 +5,11 @@
  */
 
 #import <Foundation/Foundation.h>
-#include <sys/mount.h>
-#include <string.h>
-#include <sys/stat.h>
 #import "Singleton.h"
 
 @interface FSWatcher : NSObject
-
+- (id) init;
+- (void) shouldObserveFiles: (BOOL) b;
 - (void) startWatching;
 - (void) stopWatching;
 - (void) setPaths:(NSArray *) paths;
