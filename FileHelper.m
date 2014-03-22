@@ -452,11 +452,6 @@
 }
 
 
-+ (NSDate*) currentTime {
-	return [NSDate date];
-}
-
-
 + (NSString*) getIPv4FromNetService:(NSNetService*)netService {
 	// Resolve ip
 	char addressBuffer[INET6_ADDRSTRLEN];

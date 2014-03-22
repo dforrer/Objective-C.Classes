@@ -40,12 +40,17 @@
  * so that Sqlite can handle it.
  */
 
-- (NSString *)sqlString {
-	if ([self rangeOfString:@"'"].location == NSNotFound) {
+- (NSString *) sqlString
+{
+	if ([self rangeOfString:@"'"].location == NSNotFound)
+	{
 		return self;
 	}
 	NSMutableString *mutString = [NSMutableString stringWithString:self];
-	[mutString replaceOccurrencesOfString:@"'" withString:@"''" options:0 range:NSMakeRange(0,[mutString length])];
+	[mutString replaceOccurrencesOfString: @"'"
+						  withString: @"''"
+							options: 0
+							  range: NSMakeRange(0,[mutString length])];
 	return mutString;
 }
 

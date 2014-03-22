@@ -29,7 +29,7 @@
 		//--------------------------
 		if (retval != SQLITE_OK)
 		{
-			DebugLog(@"[SQLITE] Unable to open database!");
+			NSLog(@"[SQLITE] Unable to open database!");
 			return nil; // if it fails, return nil obj
 		}
 	}
@@ -98,7 +98,7 @@
 				}
 				else
 				{
-					DebugLog(@"[SQLITE] UNKNOWN DATATYPE");
+					NSLog(@"[SQLITE] UNKNOWN DATATYPE");
 				}
 				[row addObject:value];
 			}
@@ -137,7 +137,7 @@
 
 
 /**
- * Performs a 'query' and returns the number of rows found
+ * Performs a 'query' and returns the number of rows found or changed
  * The rows themselves are accessible in the 'rows'-Array
  *
  * IMPORTENT: NSString variables need

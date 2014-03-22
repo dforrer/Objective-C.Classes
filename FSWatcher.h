@@ -9,7 +9,7 @@
 
 @interface FSWatcher : NSObject
 - (id) init;
-- (void) shouldObserveFiles: (BOOL) b;
+- (void) shouldObserveFiles: (BOOL) b;	// By Default YES
 - (void) startWatching;
 - (void) stopWatching;
 - (void) setPaths:(NSArray *) paths;

@@ -44,7 +44,6 @@
 + (NSData *) createRandomNSDataOfSize: (unsigned long)size;
 + (NSString *) createRandomNSStringOfSize: (unsigned int) numOfChars;
 + (BOOL) URL:(NSURL*) one hasAsRootURL: (NSURL*) two;
-+ (NSDate*) currentTime;
 + (NSString*) getIPv4FromNetService:(NSNetService*)netService;
 + (NSFileHandle*) fileForWritingAtPath: (NSString*) path;
 
