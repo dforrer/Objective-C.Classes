@@ -8,7 +8,8 @@
 #import "SQLiteDatabase.h"
 
 
-@implementation SQLiteDatabase {
+@implementation SQLiteDatabase
+{
 	sqlite3 * sqliteConnection;
 }
 
@@ -16,17 +17,123 @@
 /**
  * Initializes a new SQLiteDatabase-Object
  */
-- (id) initCreateAtPath: (NSString *)path {
-	// Check if superclass could create its object
-	if ((self = [super init])) {
-		if (sqlite3_open([path UTF8String], &sqliteConnection) != SQLITE_OK) {
-		   DebugLog(@"[SQLITE] Unable to open database!");
-		   return nil; // if it fails, return nil obj
+- (id) initCreateAtPath: (NSString *)path
+{
+	if ( self = [super init] )
+	{
+		// Try opening the database-connection
+		//------------------------------------
+		int retval = sqlite3_open([path UTF8String], &sqliteConnection);
+		
+		// Handle Error (and return)
+		//--------------------------
+		if (retval != SQLITE_OK)
+		{
+			DebugLog(@"[SQLITE] Unable to open database!");
+			return nil; // if it fails, return nil obj
 		}
 	}
 	return self;
 }
 
+/** 
+ * Returns TRUE if the first word of the nsstring "query"
+ * is equal to "SELECT". This function checks case insensitively.
+ */
+- (BOOL) queryCommandIsSELECT:(NSString*) query
+{
+	return [[[query componentsSeparatedByString:@" "] objectAtIndex:0] caseInsensitiveCompare:@"SELECT"] == NSOrderedSame;
+}
+
+/**
+ * SELECT
+ * Private function, only used by "performQuery: ..."
+ */
+- (long long) performSELECT: (NSString*) query
+				   rows: (NSArray**) rows
+				  error: (NSError**) error
+{
+	sqlite3_stmt *stmt = nil;
+	int retval = sqlite3_prepare_v2(sqliteConnection, [query UTF8String], -1, &stmt, NULL);
+	
+	// Handle Error (and return)
+	//--------------------------
+	if ( retval != SQLITE_OK )
+	{
+		NSString * errorString = [NSString stringWithFormat:@"[SQLITE] Error when preparing query!: %@", query];
+		*error = [NSError errorWithDomain: errorString code:retval userInfo:nil];
+		return -1;
+	}
+	
+	// Continue with SELECT (=No error)
+	//---------------------------------
+	NSMutableArray *result = [[NSMutableArray alloc] init];
+	while (sqlite3_step(stmt) == SQLITE_ROW)
+	{
+		@autoreleasepool
+		{
+			NSMutableArray *row = [[NSMutableArray alloc] init];
+			for (int i=0; i < sqlite3_column_count(stmt); i++)
+			{
+				int colType = sqlite3_column_type(stmt, i);
+				id value;
+				if (colType == SQLITE_TEXT)
+				{
+					const char *col = (const char*) sqlite3_column_text(stmt, i);
+					value = [[NSString alloc] initWithCString:col encoding:NSUTF8StringEncoding];
+				}
+				else if (colType == SQLITE_INTEGER)
+				{
+					int64_t col = sqlite3_column_int64(stmt, i);
+					value = [[NSNumber alloc] initWithLongLong:col];
+				}
+				else if (colType == SQLITE_FLOAT)
+				{
+					double col = sqlite3_column_double(stmt, i);
+					value = [[NSNumber alloc] initWithDouble:col];
+				}
+				else if (colType == SQLITE_NULL)
+				{
+					value = [NSNull null];
+				}
+				else
+				{
+					DebugLog(@"[SQLITE] UNKNOWN DATATYPE");
+				}
+				[row addObject:value];
+			}
+			[result addObject:row];
+		}
+	}
+	sqlite3_finalize(stmt);
+	*rows = result;
+	return [result count];
+
+}
+
+/**
+ * INSERT, UPDATE, DELETE, CREATE
+ * Private function, only used by "performQuery: ..."
+ */
+- (long long) performOtherCommand: (NSString*) query
+					    rows: (NSArray**) rows
+					   error: (NSError**) error
+{
+	int retval = sqlite3_exec(sqliteConnection,[query cStringUsingEncoding:NSUTF8StringEncoding],NULL,NULL,NULL);
+	
+	// Handle Error (and return)
+	//--------------------------
+	if ( retval != SQLITE_OK )
+	{
+		NSString * errorString = [NSString stringWithFormat:@"[SQLITE] Error when executing query!: %@", query];
+		*error = [NSError errorWithDomain: errorString code:retval userInfo:nil];
+		return -1;
+	}
+	
+	// Continue (= No error)
+	//-----------------------
+	return sqlite3_changes(sqliteConnection);
+}
 
 
 /**
@@ -37,131 +144,48 @@
  * to be bound using the
  * NSStringSqliteExtension
  * [string sqlString]!
+ *
  * Supports: INSERT, UPDATE, DELETE, SELECT, etc.
  **/
 - (long long) performQuery: (NSString*) query
 				  rows: (NSArray**) rows
-				 error: (NSError**) error {
-	@synchronized(self)	{
-		NSString * command = [[query componentsSeparatedByString:@" "] objectAtIndex:0];
-		if ([command isEqualToString:@"SELECT"]) {
-			// SELECT
-			sqlite3_stmt *statement = nil;
-			const char *sql = [query UTF8String];
-			int errorCode;
-			if ((errorCode = sqlite3_prepare_v2(sqliteConnection, sql, -1, &statement, NULL)) != SQLITE_OK) {
-				NSString * errorString = [NSString stringWithFormat:@"[SQLITE] Error when preparing query!: %@", query];
-				*error = [NSError errorWithDomain: errorString code:errorCode userInfo:nil];
-				return -1;
-			} else {
-				NSMutableArray *result = [[NSMutableArray alloc] init];
-				while (sqlite3_step(statement) == SQLITE_ROW) {
-					@autoreleasepool {
-						NSMutableArray *row = [[NSMutableArray alloc] init];
-						for (int i=0; i < sqlite3_column_count(statement); i++) {
-							int colType = sqlite3_column_type(statement, i);
-							id value;
-							if (colType == SQLITE_TEXT){
-								const char *col = (const char*) sqlite3_column_text(statement, i);
-								value = [[NSString alloc] initWithCString:col encoding:NSUTF8StringEncoding];
-							} else if (colType == SQLITE_INTEGER) {
-								int64_t col = sqlite3_column_int64(statement, i);
-								value = [[NSNumber alloc] initWithLongLong:col];
-							} else if (colType == SQLITE_FLOAT) {
-								double col = sqlite3_column_double(statement, i);
-								value = [[NSNumber alloc] initWithDouble:col];
-							} else if (colType == SQLITE_NULL) {
-								value = [NSNull null];
-							} else {
-								DebugLog(@"[SQLITE] UNKNOWN DATATYPE");
-							}
-							[row addObject:value];
-						}
-						[result addObject:row];
-					}
-				}
-				sqlite3_finalize(statement);
-				*rows = result;
-				return [result count];
-			}
-		} else {
-			// INSERT, UPDATE, DELETE, CREATE
-			int retval = sqlite3_exec(sqliteConnection,[query cStringUsingEncoding:NSUTF8StringEncoding],NULL,NULL,NULL);
-			if ([self handleError:retval forQuery:[query cStringUsingEncoding: NSUTF8StringEncoding]]) {
-				return sqlite3_changes(sqliteConnection);
-			} else {
-				NSString * errorString = [NSString stringWithFormat:@"[SQLITE] Error when executing query!: %@", query];
-				*error = [NSError errorWithDomain: errorString code:retval userInfo:nil];
-				return -1;
-			}
+				 error: (NSError**) error
+{
+	@synchronized( self )
+	{
+		if ( [self queryCommandIsSELECT:query] )
+		{
+			return [self performSELECT: query
+							  rows: rows
+							 error: error];
+		}
+		else
+		{
+			return [self performOtherCommand: query
+								   rows: rows
+								  error: error];
 		}
 	}
 }
-
 
 
 /**
- * Handle Errors
+ * This function returns the number of row changes
+ * caused by INSERT, UPDATE or DELETE statements
+ * since the database connection was opened.
  */
-- (int) handleError: (int)retval forQuery: (const char*)query {
-	if (retval != SQLITE_OK) {
-		switch (retval) {
-			case SQLITE_BUSY:
-				printf("ERROR: SQLITE_BUSY - The database file is locked! Query: %s\n",query);
-				return 0;
-				break;
-			case SQLITE_DONE:
-				printf("SQLITE_DONE");
-				break;
-			case SQLITE_ROW:
-				printf("SQLITE_DONE");
-				break;
-			case SQLITE_LOCKED:
-				printf("ERROR: SQLITE_LOCKED - A table in the database is locked! Query: %s\n", query);
-				return 0;
-				break;
-			case SQLITE_CANTOPEN:
-				// Dies sollte jetzt nicht mehr passieren, Problem lag wahrscheinlich bei
-				// sha384file() welches nur fopen(), nicht aber wieder fclose() ausführte,
-				// wodurch die maximal zu öffnenden Filedescriptormenge überschritten wurde.
-				printf("ERROR: SQLITE_CANTOPEN - Unable to open the database file! Query: %s\n",query);
-				return 0;
-				break;
-			case SQLITE_IOERR:
-				// Dies sollte jetzt nicht mehr passieren, Problem lag wahrscheinlich bei
-				// sha384file() welches nur fopen(), nicht aber wieder fclose() ausführte,
-				// wodurch die maximal zu öffnenden Filedescriptormenge überschritten wurde.
-				printf("ERROR: SQLITE_IOERR - Some kind of disk I/O error occurred! Query: %s\n",query);
-				return 0;
-				break;
-			case SQLITE_MISUSE:
-				printf("ERROR: SQLITE_MISUSE - Library used incorrectly! Query: %s\n",query);
-				return 0;
-				break;
-			case SQLITE_ERROR:
-				printf("ERROR: SQLITE_ERROR - SQL error or missing database! Query: %s\n",query);
-				return 0;
-				break;
-			case SQLITE_CONSTRAINT:
-				printf("SQLITE_CONSTRAINT: Abort due to constraint violation!\n");
-				return 0;
-				break;
-			default:
-				printf("Sqlite-ERROR %i: Can't execute: %s\n",retval, query);
-				return 0;
-				break;
-		}
-	}
-	return 1;
-}
-
-
-- (int) getTotalChanges {
+- (int) getTotalChanges
+{
 	return sqlite3_total_changes(sqliteConnection);
 }
 
-
-- (int) getChanges {
+/**
+ * This function returns the number of database rows
+ * that were changed or inserted or deleted by the most
+ * recently completed SQL statement
+ */
+- (int) getChanges
+{
 	return sqlite3_changes(sqliteConnection);
 }
 

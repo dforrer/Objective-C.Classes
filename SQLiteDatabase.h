@@ -18,8 +18,7 @@
 				 error: (NSError**) error;
 - (int) getTotalChanges;
 - (int) getChanges;
-- (int) handleError:(int) retval
-		 forQuery: (const char*) query;
+
 
 @end
 
