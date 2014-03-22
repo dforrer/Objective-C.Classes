@@ -28,11 +28,16 @@
 		[data setLength:blockSize];
 		NSInteger bytesRead = [unencryptedStream read:[data mutableBytes]
 									 maxLength:blockSize];
-		if (bytesRead < 0) {
+		if (bytesRead < 0)
+		{
 			// Throw an error
-		} else if (bytesRead == 0) {
+		}
+		else if (bytesRead == 0)
+		{
 			[encryptor finish];
-		} else {
+		}
+		else
+		{
 			[data setLength:bytesRead];
 			[encryptor addData:data];
 			NSLog(@"Sent %ld bytes to decryptor", (unsigned long)bytesRead);
@@ -44,12 +49,14 @@
 											  handler:^(RNCryptor *cryptor, NSData *data) {
 												  NSLog(@"Decryptor recevied %ld bytes", (unsigned long)data.length);
 												  [encryptedStream write:data.bytes maxLength:data.length];
-												  if (cryptor.isFinished) {
+												  if (cryptor.isFinished)
+												  {
 													  [encryptedStream close];
 													  DebugLog(@"Encryption finished")
 													  // call my delegate that I'm finished with decrypting
 												  }
-												  else {
+												  else
+												  {
 													  // Might want to put this in a dispatch_async(), but I don't think you need it.
 													  readStreamBlock();
 												  }

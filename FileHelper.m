@@ -37,16 +37,20 @@
  * with all of its contents.
  */
 
-+ (BOOL) replaceSymlinkAtPath: (NSString*) path {
++ (BOOL) replaceSymlinkAtPath: (NSString*) path
+{
 	DebugLog(@"PATH: %@\n", path);
 	NSString * pointsTo = [[NSFileManager defaultManager] destinationOfSymbolicLinkAtPath:path error:nil];
 	DebugLog(@"POINTS TO: %@\n", pointsTo);
 	NSString * newPath;
 	
-	if (![pointsTo hasPrefix:@"/"]) {
+	if (![pointsTo hasPrefix:@"/"])
+	{
 		newPath = [path stringByDeletingLastPathComponent];
 		newPath = [newPath stringByAppendingPathComponent:pointsTo];
-	} else {
+	}
+	else
+	{
 		newPath = pointsTo;
 	}
 	
@@ -55,7 +59,8 @@
 	NSError * error;
 	[[NSFileManager defaultManager] removeItemAtPath:path error:&error];
 	
-	if (error) {
+	if (error)
+	{
 		DebugLog(@"ERROR 1: %@\n", error);
 		return FALSE;
 	}
@@ -66,7 +71,8 @@
 	
 	[[NSFileManager defaultManager] copyItemAtPath:newPath toPath:path error:&error];
 	
-	if (error) {
+	if (error)
+	{
 		// we get an error here, if newPath points to
 		// a location that does not exist, e.g. if the
 		// symlink contains an absolute path from
@@ -83,16 +89,20 @@
  * UNTESTED
  */
 
-+ (void) removeSymlinksRecursiveAtPath: (NSString*) path {
++ (void) removeSymlinksRecursiveAtPath: (NSString*) path
+{
 	BOOL continueScanning = TRUE;
-	while (continueScanning) {
-		@autoreleasepool {
+	while (continueScanning)
+	{
+		@autoreleasepool
+		{
 			continueScanning = FALSE;
-			
 			NSArray * initialscan = [FileHelper scanDirectoryRecursive:[NSURL fileURLWithPath:path]];
-			
-			for (NSURL * u in initialscan) {
-				if ([FileHelper isSymbolicLink:[u path]]) {
+
+			for (NSURL * u in initialscan)
+			{
+				if ([FileHelper isSymbolicLink:[u path]])
+				{
 					continueScanning = TRUE;
 					[FileHelper replaceSymlinkAtPath:[u path]];
 				}
@@ -107,8 +117,10 @@
  * Keys allow us to precache information
  */
 
-+ (NSArray *) scanDirectory: (NSURL *) u {
-	@autoreleasepool {
++ (NSArray *) scanDirectory: (NSURL *) u
+{
+	@autoreleasepool
+	{
 		NSArray *keys = [NSArray arrayWithObjects:NSURLNameKey, NSURLIsDirectoryKey, NSURLIsSymbolicLinkKey, NSURLIsPackageKey, NSURLContentModificationDateKey, NSURLIsReadableKey, NSURLPathKey, NSURLFileResourceTypeKey, NSURLParentDirectoryURLKey, NSURLFileSizeKey,nil];
 		
 		NSArray *filelist = [[NSFileManager defaultManager] contentsOfDirectoryAtURL:u includingPropertiesForKeys:keys options:0 error:nil];
@@ -122,8 +134,10 @@
  * Keys allow us to precache information
  */
 
-+ (NSArray *) scanDirectoryRecursive: (NSURL *) u {
-	@autoreleasepool {
++ (NSArray *) scanDirectoryRecursive: (NSURL *) u
+{
+	@autoreleasepool
+	{
 		// DebugLog(@"FUNKTION: scanDirectoryRecursive");
 		
 		NSMutableArray * filelist = [[NSMutableArray alloc] init];
@@ -136,8 +150,10 @@
 			return YES;
 		   }];
 		
-		for (NSURL *url in enumerator) {
-			@autoreleasepool {
+		for (NSURL *url in enumerator)
+		{
+			@autoreleasepool
+			{
 				[filelist addObject:url];
 			}
 		}
@@ -192,12 +208,18 @@
  * Returns TRUE if a file has xattr-attributes
  */
 
-+ (BOOL) hasExtendedAttributes:(NSString *) path {
-	@autoreleasepool {
++ (BOOL) hasExtendedAttributes:(NSString *) path
+{
+	@autoreleasepool
+	{
 		size_t size_list = listxattr([path cStringUsingEncoding:NSUTF8StringEncoding], NULL, 1, 0);
-		if (size_list<=0) {
+		
+		if (size_list<=0)
+		{
 			return FALSE;
-		} else {
+		}
+		else
+		{
 			return TRUE;
 		}
 	}
@@ -210,33 +232,40 @@
  * if the file/folder really has extended Attributes
  */
 
-+ (NSMutableDictionary*) extendedAttrAsDictAtPath: (NSString *)path {
-	@autoreleasepool {
++ (NSMutableDictionary*) extendedAttrAsDictAtPath: (NSString *)path
+{
+	@autoreleasepool
+	{
 		// Get xattr data
 		size_t size_list = listxattr([path cStringUsingEncoding:NSUTF8StringEncoding], NULL, 1, 0);
 		char *listxattr_data = malloc(size_list+1);
 		size_t rv	= listxattr([path cStringUsingEncoding:NSUTF8StringEncoding], listxattr_data, size_list, 0);
-		if (rv == -1) {
+		if (rv == -1)
+		{
 			return nil;
 		}
 		// remove all NULLs in listxattr_data
 		int number_of_attributes = 0;
-		for (int i=0; i<size_list; i++) {
-			if (listxattr_data[i]==0) {
+		for (int i=0; i<size_list; i++)
+		{
+			if (listxattr_data[i]==0)
+			{
 				listxattr_data[i] = '/';
 				number_of_attributes++;
 			}
 		}
 		// NULL-terminate the string
 		listxattr_data [ size_list ] = '\0';
-		if ( number_of_attributes == 0 ) {
+		if ( number_of_attributes == 0 )
+		{
 			return nil;
 		}
 		// Parse listxattr_data
 		NSMutableDictionary * xattr_list = [[NSMutableDictionary alloc] init];
 		char * pch;
 		pch = strtok(listxattr_data,"/");
-		while ( pch != NULL ) {
+		while ( pch != NULL )
+		{
 			// UPDATE hash: length_attribute_name
 			NSString * attributeName = [[NSString alloc] initWithCString:pch encoding:NSUTF8StringEncoding];
 			//DebugLog(@"attributeName: %@", attributeName);
@@ -248,9 +277,12 @@
 			do {
 				//printfdebug("do-While-Loop: offset: %lld, bytestoread: %i\n",offset, bytestoread);
 				// Define how much to read
-				if (size_attr - offset > 4000) {
+				if (size_attr - offset > 4000)
+				{
 					bytestoread = 4000;
-				}else{
+				}
+				else
+				{
 					bytestoread = (int)size_attr - (int)offset;
 				}
 				//printfdebug("size_attr: %i, offset: %lld, bytestoread: %i\n", size_attr, offset, bytestoread);
@@ -261,7 +293,8 @@
 				// attribute.  For all other extended attributes, this parameter is reserved
 				// and should be zero.
 				int rv = (int) getxattr([path cStringUsingEncoding:NSUTF8StringEncoding], pch, attr_part, bytestoread, (unsigned int)offset, 0);
-				if (rv == -1) {
+				if (rv == -1)
+				{
 					return nil;
 				}
 				[attributeData appendBytes:attr_part length:bytestoread];
@@ -281,12 +314,15 @@
  * Calculates the SHA1-Hash of the File at path
  */
 
-+ (NSString *) sha1OfFile: (NSString *)path {
-	@autoreleasepool {
++ (NSString *) sha1OfFile: (NSString *)path
+{
+	@autoreleasepool
+	{
 		// Sets the file pointer to the beginning of the file
 		NSFileHandle * fh = [NSFileHandle fileHandleForReadingAtPath:path];
 		
-		if (!fh) {
+		if (!fh)
+		{
 			DebugLog(@"sha1OfFile failed");
 			return nil;
 		}
@@ -297,7 +333,8 @@
 		NSData * buffer;
 		
 		do {
-			@autoreleasepool {
+			@autoreleasepool
+			{
 				buffer = [fh readDataOfLength:4096];
 				CC_SHA1_Update( &state , [buffer bytes] , (int) [buffer length] );
 			}
