@@ -1,5 +1,5 @@
 /**
- * VERSION:	1.4
+ * VERSION:	1.41
  * AUTHOR:	Daniel Forrer
  * FEATURES:
  */
@@ -227,6 +227,12 @@
 
 
 /**
+ * DEPRECEATED: Use instead
+ *
+ * + (BOOL)setValue:(NSObject *)value forName:(NSString *)name onFile:(NSString *)filePath;
+ * + (NSData *)getDataValueForName:(NSString *)name onFile:(NSString *)filePath;
+ * + (NSDictionary *)getAllValuesOnFile:(NSString *)filePath;
+ * 
  * Returns an NSDictionary with the extended Attributes
  * Before calling this function check with "hasExtendedAttributes"
  * if the file/folder really has extended Attributes
@@ -242,6 +248,7 @@
 		size_t rv	= listxattr([path cStringUsingEncoding:NSUTF8StringEncoding], listxattr_data, size_list, 0);
 		if (rv == -1)
 		{
+			free(listxattr_data);
 			return nil;
 		}
 		// remove all NULLs in listxattr_data
@@ -258,6 +265,7 @@
 		listxattr_data [ size_list ] = '\0';
 		if ( number_of_attributes == 0 )
 		{
+			free(listxattr_data);
 			return nil;
 		}
 		// Parse listxattr_data
@@ -295,6 +303,7 @@
 				int rv = (int) getxattr([path cStringUsingEncoding:NSUTF8StringEncoding], pch, attr_part, bytestoread, (unsigned int)offset, 0);
 				if (rv == -1)
 				{
+					free(listxattr_data);
 					return nil;
 				}
 				[attributeData appendBytes:attr_part length:bytestoread];
@@ -486,6 +495,89 @@
 		h = [NSFileHandle fileHandleForWritingAtPath: path];
 	}
 	return h;
+}
+
+/**
+ * Set attribute of a file
+ * Copied from: http://senojsitruc.blogspot.ch/2012/01/getting-and-setting-files-extended.html
+ */
++ (BOOL)setValue:(NSObject *)value forName:(NSString *)name onFile:(NSString *)filePath
+{
+	int err;
+	const void *bytes = NULL;
+	size_t length = 0;
+	
+	if ([value isKindOfClass:[NSString class]]) {
+		bytes = [(NSString *)value UTF8String];
+		length = [(NSString *)value lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+	}
+	else if ([value isKindOfClass:[NSData class]]) {
+		bytes = [(NSData *)value bytes];
+		length = [(NSData *)value length];
+	}
+	else {
+		NSLog(@"%s.. unsupported data type, %@", __PRETTY_FUNCTION__, NSStringFromClass([value class]));
+		return FALSE;
+	}
+	
+	if (0 != (err = setxattr([filePath UTF8String], [name UTF8String], bytes, length, 0, 0))) {
+		NSLog(@"%s.. failed to setxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
+	}
+	
+	return TRUE;
+}
+
+/**
+ * Get file attribute
+ * Copied from: http://senojsitruc.blogspot.ch/2012/01/getting-and-setting-files-extended.html
+ */
++ (NSData *)getDataValueForName:(NSString *)name onFile:(NSString *)filePath
+{
+	ssize_t size;
+	void *buffer[4096];
+	
+	if (0 > (size = getxattr([filePath UTF8String], [name UTF8String], buffer, sizeof(buffer), 0, 0)) || size > sizeof(buffer)) {
+		NSLog(@"%s.. failed to getxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
+		return nil;
+	}
+	
+	return [[NSData alloc] initWithBytes:buffer length:size];
+}
+
+/**
+ * Get all file attributes
+ * Copied from: http://senojsitruc.blogspot.ch/2012/01/getting-and-setting-files-extended.html
+ */
++ (NSDictionary *)getAllValuesOnFile:(NSString *)filePath
+{
+	ssize_t size;
+	char buffer[4096], *bufferPtr;
+	NSMutableDictionary *attributes = [[NSMutableDictionary alloc] init];
+	
+	if (0 > (size = listxattr([filePath UTF8String], buffer, sizeof(buffer), 00))
+	    || size > sizeof(buffer))
+	{
+		NSLog(@"%s.. failed to listxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
+		return nil;
+	}
+	
+	bufferPtr = buffer;
+	
+	for (ssize_t bufferNdx = 0; bufferNdx < size; )
+	{
+		NSString *name = [NSString stringWithCString:bufferPtr encoding:NSUTF8StringEncoding];
+		NSData *value = [self getDataValueForName:name onFile:filePath];
+		unsigned long namelen = strlen(bufferPtr);
+		
+		if (name && value)
+		{
+			[attributes setValue:value forKey:name];
+		}
+		bufferPtr += namelen + 1;
+		bufferNdx += namelen + 1;
+	}
+	
+	return attributes;
 }
 
 @end

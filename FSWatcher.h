@@ -15,6 +15,8 @@
 - (void) setPaths:(NSArray *) paths;
 
 @property (nonatomic, readonly, strong) NSArray * trackedPaths;
+@property (nonatomic, readonly) BOOL observeFiles;
+@property (nonatomic, readonly) BOOL ignoreSelf;
 
 @end
 

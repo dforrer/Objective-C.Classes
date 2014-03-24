@@ -100,7 +100,10 @@
 				{
 					NSLog(@"[SQLITE] UNKNOWN DATATYPE");
 				}
-				[row addObject:value];
+				if (value != nil)
+				{
+					[row addObject:value];
+				}
 			}
 			[result addObject:row];
 		}

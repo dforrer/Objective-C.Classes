@@ -11,12 +11,11 @@
 @implementation FSWatcher
 {
 	FSEventStreamRef eeventStream;
-	BOOL observeFiles;
 }
 
 
 
-@synthesize trackedPaths;
+@synthesize trackedPaths, observeFiles, ignoreSelf;
 
 
 /*
@@ -27,6 +26,7 @@
 	if (self = [super init])
 	{
 		observeFiles = TRUE;
+		ignoreSelf = TRUE;
 	}
 	return self;
 }
@@ -35,6 +35,12 @@
 - (void) shouldObserveFiles: (BOOL) b
 {
 	observeFiles = b;
+	[self setPaths: trackedPaths];
+}
+
+- (void) shouldIgnoreSelf: (BOOL) b
+{
+	ignoreSelf = b;
 	[self setPaths: trackedPaths];
 }
 
@@ -63,16 +69,17 @@
 	}
 	
 	// Switch between "Observe folders only" / "Observe Files and Folders"
+	// Set ignoreSelf-flag
 	//--------------------------------------------------------------------
 	
-	int flags;
+	int flags = kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagWatchRoot;
 	if (observeFiles)
 	{
-		flags = kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagWatchRoot|kFSEventStreamCreateFlagFileEvents;
+		flags |= kFSEventStreamCreateFlagFileEvents;
 	}
-	else
+	if (ignoreSelf)
 	{
-		flags = kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagWatchRoot;
+		flags |= kFSEventStreamCreateFlagIgnoreSelf;
 	}
 	
 	// Recreate the FSEventStream
