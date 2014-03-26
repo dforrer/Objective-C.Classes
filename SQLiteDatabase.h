@@ -4,10 +4,7 @@
  * FEATURES:	Thread-safe
  */
 
-
-#import <Foundation/Foundation.h>
-#import <sqlite3.h>
-
+#import <Cocoa/Cocoa.h>
 
 @interface SQLiteDatabase : NSObject
 

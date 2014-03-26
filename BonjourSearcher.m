@@ -4,7 +4,12 @@
  * FEATURES:
  */
 
+// HEADER
 #import "BonjourSearcher.h"
+
+
+//#include <arpa/inet.h>
+
 
 @implementation BonjourSearcher
 {

@@ -1,7 +1,11 @@
+
+
 /*
  Copied from this link:
  http://stackoverflow.com/questions/230984/compression-api-on-the-iphone/234099#234099
  */
+
+#import <Cocoa/Cocoa.h>
 
 @interface NSData (NSDataGZip)
 

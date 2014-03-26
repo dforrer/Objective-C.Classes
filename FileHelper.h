@@ -4,23 +4,8 @@
  * FEATURES:
  */
 
-#define DEBUG_MODE
 
-#ifdef DEBUG_MODE
-#define DebugLog( s, ... ) NSLog( @"<%@:(%d)> \t%@", [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__] )
-#define NSLog(FORMAT, ...) fprintf( stderr, "%s\n", [[NSString stringWithFormat:FORMAT, ##__VA_ARGS__] UTF8String] );
-//#define DebugLog( s, ... ) void
-
-#else
-#define DebugLog( s, ... )
-#endif
-
-#include <CommonCrypto/CommonDigest.h>
-#include <sys/xattr.h>
-#include <sys/stat.h>
 #import <Cocoa/Cocoa.h>
-#include <arpa/inet.h>
-
 
 @interface FileHelper : NSObject
 

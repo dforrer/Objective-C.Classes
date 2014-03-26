@@ -4,8 +4,14 @@
  * FEATURES:
  */
 
-
+// HEADER
 #import "FileHelper.h"
+
+#include <arpa/inet.h>
+#include <CommonCrypto/CommonDigest.h>
+#include <sys/xattr.h>
+#include <sys/stat.h>
+
 
 @implementation FileHelper
 
@@ -39,9 +45,9 @@
 
 + (BOOL) replaceSymlinkAtPath: (NSString*) path
 {
-	DebugLog(@"PATH: %@\n", path);
+	NSLog(@"PATH: %@\n", path);
 	NSString * pointsTo = [[NSFileManager defaultManager] destinationOfSymbolicLinkAtPath:path error:nil];
-	DebugLog(@"POINTS TO: %@\n", pointsTo);
+	NSLog(@"POINTS TO: %@\n", pointsTo);
 	NSString * newPath;
 	
 	if (![pointsTo hasPrefix:@"/"])
@@ -54,14 +60,14 @@
 		newPath = pointsTo;
 	}
 	
-	DebugLog(@"NEWPATH: %@\n", newPath);
+	NSLog(@"NEWPATH: %@\n", newPath);
 	
 	NSError * error;
 	[[NSFileManager defaultManager] removeItemAtPath:path error:&error];
 	
 	if (error)
 	{
-		DebugLog(@"ERROR 1: %@\n", error);
+		NSLog(@"ERROR 1: %@\n", error);
 		return FALSE;
 	}
 	
@@ -78,7 +84,7 @@
 		// symlink contains an absolute path from
 		// a different system.
 		
-		DebugLog(@"ERROR 2: %@\n", error);
+		NSLog(@"ERROR 2: %@\n", error);
 		return FALSE;
 	}
 	return TRUE;
@@ -138,7 +144,7 @@
 {
 	@autoreleasepool
 	{
-		// DebugLog(@"FUNKTION: scanDirectoryRecursive");
+		// NSLog(@"FUNKTION: scanDirectoryRecursive");
 		
 		NSMutableArray * filelist = [[NSMutableArray alloc] init];
 		
@@ -173,7 +179,7 @@
 		NSError *error;
 		NSData *data = [NSPropertyListSerialization dataWithPropertyList:dict format: NSPropertyListXMLFormat_v1_0 options:0 error:&error];
 		if (data == nil) {
-			DebugLog (@"error serializing to xml: %@", error);
+			NSLog (@"error serializing to xml: %@", error);
 			return nil;
 		}
 		return data;
@@ -276,7 +282,7 @@
 		{
 			// UPDATE hash: length_attribute_name
 			NSString * attributeName = [[NSString alloc] initWithCString:pch encoding:NSUTF8StringEncoding];
-			//DebugLog(@"attributeName: %@", attributeName);
+			//NSLog(@"attributeName: %@", attributeName);
 			// Get xattr-attributes for attribute-name
 			size_t size_attr = getxattr([path cStringUsingEncoding:NSUTF8StringEncoding], pch, NULL, 1, 0, 0);
 			NSMutableData * attributeData = [[NSMutableData alloc] init];
@@ -332,7 +338,7 @@
 		
 		if (!fh)
 		{
-			DebugLog(@"sha1OfFile failed");
+			NSLog(@"sha1OfFile failed");
 			return nil;
 		}
 		

@@ -4,8 +4,18 @@
  * FEATURES:
  */
 
-
+// HEADER
 #import "FileEncryptor.h"
+
+#include <CommonCrypto/CommonDigest.h>
+/*
+ GET RNEncryptor from this link:
+ https://github.com/RNCryptor/RNCryptor
+ */
+#import "RNCryptor.h"
+#import "RNEncryptor.h"
+#import "RNDecryptor.h"
+
 
 @implementation FileEncryptor
 
@@ -52,7 +62,7 @@
 												  if (cryptor.isFinished)
 												  {
 													  [encryptedStream close];
-													  DebugLog(@"Encryption finished")
+													  NSLog(@"Encryption finished");
 													  // call my delegate that I'm finished with decrypting
 												  }
 												  else

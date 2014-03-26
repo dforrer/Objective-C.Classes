@@ -1,5 +1,5 @@
 
-
+#import "NSDataGZipCategory.h"
 
 #include <zlib.h>
 

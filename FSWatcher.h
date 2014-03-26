@@ -4,8 +4,8 @@
  * FEATURES:
  */
 
-#import <Foundation/Foundation.h>
-#import "Singleton.h"
+#import <Cocoa/Cocoa.h>
+
 
 @interface FSWatcher : NSObject
 - (id) init;

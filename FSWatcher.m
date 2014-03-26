@@ -4,8 +4,11 @@
  * FEATURES:
  */
 
-
+// HEADER
 #import "FSWatcher.h"
+
+#import <Foundation/Foundation.h>
+#import "Singleton.h"
 
 
 @implementation FSWatcher
@@ -104,7 +107,7 @@
  */
 - (void) startWatching
 {
-	//DebugLog(@"Watcher started: %@",trackedPaths);
+	//NSLog(@"Watcher started: %@",trackedPaths);
 	FSEventStreamScheduleWithRunLoop(eeventStream,[[NSRunLoop mainRunLoop] getCFRunLoop],kCFRunLoopDefaultMode);
 	FSEventStreamStart(eeventStream);
 }
@@ -117,7 +120,7 @@
  */
 - (void) stopWatching
 {
-	//DebugLog(@"Watcher is no longer watching the directorie(s)");
+	//NSLog(@"Watcher is no longer watching the directorie(s)");
 	FSEventStreamStop(eeventStream);
 	FSEventStreamUnscheduleFromRunLoop(eeventStream, [[NSRunLoop mainRunLoop] getCFRunLoop],kCFRunLoopDefaultMode);
 }

@@ -5,8 +5,6 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#include <arpa/inet.h>
-
 
 @interface BonjourSearcher : NSObject <NSNetServiceBrowserDelegate, NSNetServiceDelegate>
 
