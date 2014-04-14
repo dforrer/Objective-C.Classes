@@ -1,5 +1,5 @@
 /**
- * VERSION:	1.01
+ * VERSION:	1.02
  * AUTHOR:	Daniel Forrer
  * FEATURES:
  */
@@ -15,10 +15,16 @@
  */
 
 @property (nonatomic,readonly,strong) NSMutableArray * resolvedServices;
+@property (nonatomic,readonly,strong) NSString * myServiceName;
 
 
 - (id) initWithServiceType: (NSString *) type
 			  andDomain: (NSString *) domain;
 
+- (id) initWithServiceType: (NSString *) type
+			  andDomain: (NSString *) domain
+		andMyName: (NSString *) name;
+
+- (NSNetService*) getNetServiceWithName: (NSString *) name;
 
 @end
