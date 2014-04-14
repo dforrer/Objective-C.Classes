@@ -33,11 +33,7 @@
 		resolvedServices = [[NSMutableArray alloc] init];
 		serviceBrowser = [[NSNetServiceBrowser alloc] init];
 		myServiceName = [[NSHost currentHost] localizedName];
-<<<<<<< HEAD
 		DebugLog(@"myServiceName: %@", myServiceName);
-=======
-		NSLog(@"myServiceName: %@", myServiceName);
->>>>>>> FETCH_HEAD
 		[serviceBrowser setDelegate:self];
 		/*
 		 The following line would search for all bonjour services:
@@ -57,20 +53,12 @@
 {
 	if ((self = [super init]))
 	{
-<<<<<<< HEAD
 		DebugLog(@"BonjourServiceSearcher: init");
-=======
-		NSLog(@"BonjourServiceSearcher: init");
->>>>>>> FETCH_HEAD
 		services = [[NSMutableArray alloc] init];
 		resolvedServices = [[NSMutableArray alloc] init];
 		serviceBrowser	= [[NSNetServiceBrowser alloc] init];
 		myServiceName = name;
-<<<<<<< HEAD
 		DebugLog(@"myServiceName: %@", myServiceName);
-=======
-		NSLog(@"myServiceName: %@", myServiceName);
->>>>>>> FETCH_HEAD
 		[serviceBrowser setDelegate:self];
 		/*
 		 The following line would search for all bonjour services:
