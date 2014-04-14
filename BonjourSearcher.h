@@ -1,10 +1,19 @@
 /**
- * VERSION:	1.01
+ * VERSION:	1.02
  * AUTHOR:	Daniel Forrer
  * FEATURES:
  */
 
+
+#ifdef __OBJC__
+
 #import <Cocoa/Cocoa.h>
+#define NSLog(FORMAT, ...) fprintf( stderr, "%s\n", [[NSString stringWithFormat:FORMAT, ##__VA_ARGS__] UTF8String] );
+#define DebugLog( s, ... ) NSLog( @"<%@:(%d)> \t%@", [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__] )
+
+#endif
+
+
 
 @interface BonjourSearcher : NSObject <NSNetServiceBrowserDelegate, NSNetServiceDelegate>
 
@@ -15,10 +24,16 @@
  */
 
 @property (nonatomic,readonly,strong) NSMutableArray * resolvedServices;
+@property (nonatomic,readonly,strong) NSString * myServiceName;
 
 
 - (id) initWithServiceType: (NSString *) type
 			  andDomain: (NSString *) domain;
 
+- (id) initWithServiceType: (NSString *) type
+			  andDomain: (NSString *) domain
+		andMyName: (NSString *) name;
+
+- (NSNetService*) getNetServiceWithName: (NSString *) name;
 
 @end

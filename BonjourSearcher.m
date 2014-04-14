@@ -1,5 +1,5 @@
 /**
- * VERSION:	1.01
+ * VERSION:	1.02
  * AUTHOR:	Daniel Forrer
  * FEATURES:
  */
@@ -18,6 +18,7 @@
 }
 
 @synthesize resolvedServices;
+@synthesize myServiceName;
 
 /**
  * Initializer
@@ -27,10 +28,37 @@
 {
 	if ((self = [super init]))
 	{
-		NSLog(@"BonjourServiceSearcher: init");
+		DebugLog(@"BonjourServiceSearcher: init");
 		services = [[NSMutableArray alloc] init];
 		resolvedServices = [[NSMutableArray alloc] init];
 		serviceBrowser = [[NSNetServiceBrowser alloc] init];
+		myServiceName = [[NSHost currentHost] localizedName];
+		DebugLog(@"myServiceName: %@", myServiceName);
+		[serviceBrowser setDelegate:self];
+		/*
+		 The following line would search for all bonjour services:
+		 [serviceBrowser searchForServicesOfType:@"_services._dns-sd._udp." inDomain:@""];
+		 */
+		[serviceBrowser searchForServicesOfType: type inDomain: domain];
+	}
+	return self;
+}
+
+/**
+ * Initializer
+ */
+- (id) initWithServiceType: (NSString *) type
+			  andDomain: (NSString *) domain
+		andMyName: (NSString *) name
+{
+	if ((self = [super init]))
+	{
+		DebugLog(@"BonjourServiceSearcher: init");
+		services = [[NSMutableArray alloc] init];
+		resolvedServices = [[NSMutableArray alloc] init];
+		serviceBrowser	= [[NSNetServiceBrowser alloc] init];
+		myServiceName = name;
+		DebugLog(@"myServiceName: %@", myServiceName);
 		[serviceBrowser setDelegate:self];
 		/*
 		 The following line would search for all bonjour services:
@@ -51,11 +79,11 @@
 {
 	// Compare the Name of the new service with local computer name
 	// so that we don't connect to ourselfs!
-	if (![[aNetService name] isEqualToString:[[NSHost currentHost] localizedName]])
+	if (![[aNetService name] isEqualToString: myServiceName])
 	{
 		if (![services containsObject:aNetService])
 		{
-			NSLog(@"NetService added to services Array: %@",aNetService);
+			DebugLog(@"NetService added to services Array: %@",aNetService);
 			[services addObject:aNetService];
 			[aNetService setDelegate:self];
 			[aNetService resolveWithTimeout:3];
@@ -72,7 +100,7 @@
 {
 	if ([services containsObject:aNetService])
 	{
-		NSLog(@"BonjourServiceSearcher: didRemoveService");
+		DebugLog(@"BonjourServiceSearcher: didRemoveService");
 		[self willChangeValueForKey:@"services"];
 		[services removeObject:aNetService];
 		[resolvedServices removeObject:aNetService];
@@ -85,7 +113,7 @@
  */
 - (void) netServiceDidResolveAddress: (NSNetService *)aNetService
 {
-	NSLog(@"BonjourServiceSearcher: didResolveService: \nname: %@, \nhostname: %@",[aNetService name], [aNetService hostName]);
+	DebugLog(@"BonjourServiceSearcher: didResolveService: \nname: %@, \nhostname: %@",[aNetService name], [aNetService hostName]);
 	[resolvedServices addObject:aNetService];
 }
 
@@ -95,8 +123,22 @@
 - (void) netService: (NSNetService *)aNetService
 	 didNotResolve: (NSDictionary *)errorDict
 {
-	NSLog(@"Resolve failed");
+	DebugLog(@"Resolve failed");
 	[services removeObject:aNetService];
 }
+
+
+- (NSNetService*) getNetServiceWithName: (NSString*) name
+{
+	for (NSNetService * ns in resolvedServices)
+	{
+		if ([[ns name] isEqualToString:name])
+		{
+			return ns;
+		}
+	}
+	return nil;
+}
+
 
 @end

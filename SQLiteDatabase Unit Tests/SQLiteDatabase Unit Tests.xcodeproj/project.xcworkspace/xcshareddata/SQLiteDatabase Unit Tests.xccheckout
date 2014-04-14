@@ -5,19 +5,19 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
-	<string>49D33AE7-A31B-4212-BB73-0A2CA49C9A39</string>
+	<string>70B72A03-5A5D-4BAA-B728-4D44B5DBE290</string>
 	<key>IDESourceControlProjectName</key>
 	<string>SQLiteDatabase Unit Tests</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>179EEBD8-E6AE-41E4-9EF6-A51C6B2CF8C7</key>
+		<key>535B6F07-755E-4347-87D2-B6436CCF99D6</key>
 		<string>https://github.com/dforrer/Objective-C.Classes.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
 	<string>SQLiteDatabase Unit Tests/SQLiteDatabase Unit Tests.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>179EEBD8-E6AE-41E4-9EF6-A51C6B2CF8C7</key>
+		<key>535B6F07-755E-4347-87D2-B6436CCF99D6</key>
 		<string>../../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
@@ -25,16 +25,16 @@
 	<key>IDESourceControlProjectVersion</key>
 	<integer>110</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>179EEBD8-E6AE-41E4-9EF6-A51C6B2CF8C7</string>
+	<string>535B6F07-755E-4347-87D2-B6436CCF99D6</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>179EEBD8-E6AE-41E4-9EF6-A51C6B2CF8C7</string>
+			<string>535B6F07-755E-4347-87D2-B6436CCF99D6</string>
 			<key>IDESourceControlWCCName</key>
-			<string>Objective-C</string>
+			<string>Objective-C.Classes</string>
 		</dict>
 	</array>
 </dict>

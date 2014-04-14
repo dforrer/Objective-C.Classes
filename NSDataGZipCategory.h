@@ -5,7 +5,15 @@
  http://stackoverflow.com/questions/230984/compression-api-on-the-iphone/234099#234099
  */
 
+
+#ifdef __OBJC__
+
 #import <Cocoa/Cocoa.h>
+#define NSLog(FORMAT, ...) fprintf( stderr, "%s\n", [[NSString stringWithFormat:FORMAT, ##__VA_ARGS__] UTF8String] );
+#define DebugLog( s, ... ) NSLog( @"<%@:(%d)> \t%@", [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__] )
+
+#endif
+
 
 @interface NSData (NSDataGZip)
 
