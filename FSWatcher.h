@@ -15,12 +15,13 @@
 
 
 @interface FSWatcher : NSObject
+
 - (id) init;
 - (void) shouldObserveFiles: (BOOL) b;	// By Default YES
-- (void) shouldIgnoreSelf: (BOOL) b;
+- (void) shouldIgnoreSelf: (BOOL) b;	// By Default YES
+- (void) setPaths:(NSArray *) paths;
 - (void) startWatching;
 - (void) stopWatching;
-- (void) setPaths:(NSArray *) paths;
 
 @property (nonatomic, readonly, strong) NSArray * trackedPaths;
 @property (nonatomic, readonly) BOOL observeFiles;

@@ -17,7 +17,8 @@
 
 @interface FileHelper : NSObject
 
-
++ (void) setFilePermissionsTo777: (NSString*) filepath;
++ (BOOL) hashA:(NSString*) hashA isSmallerThanHashB: (NSString *) hashB;
 + (NSString *) getDocumentsDirectory;
 + (BOOL) isSymbolicLink: (NSString*) path;
 + (BOOL) replaceSymlinkAtPath: (NSString*) path;
@@ -39,7 +40,7 @@
 + (BOOL) URL:(NSURL*) one hasAsRootURL: (NSURL*) two;
 + (NSString*) getIPv4FromNetService:(NSNetService*)netService;
 + (NSFileHandle*) fileForWritingAtPath: (NSString*) path;
-
++ (BOOL) removeAllFilesInDir:(NSString*)path;
 // Get and Set extended attrbutes of files
 + (BOOL)setValue:(NSObject *)value forName:(NSString *)name onFile:(NSString *)filePath;
 + (NSData *)getDataValueForName:(NSString *)name onFile:(NSString *)filePath;

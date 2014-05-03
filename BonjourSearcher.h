@@ -34,6 +34,6 @@
 			  andDomain: (NSString *) domain
 		andMyName: (NSString *) name;
 
-- (NSNetService*) getNetServiceWithName: (NSString *) name;
+- (NSNetService*) getNetServiceForName: (NSString *) name;
 
 @end

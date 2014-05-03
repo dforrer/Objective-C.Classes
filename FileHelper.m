@@ -15,6 +15,26 @@
 
 @implementation FileHelper
 
++ (void) setFilePermissionsTo777: (NSString*) filepath
+{
+	NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
+	[dict setObject:[NSNumber numberWithInt:511]  forKey:NSFilePosixPermissions]; /*511 is Decimal for the 777 octal*/
+	NSError *error1;
+	[[NSFileManager defaultManager] setAttributes:dict ofItemAtPath:filepath error:&error1];
+	if (error1) {
+		DebugLog(@"setFilePermissionsTo777: %@", error1);
+	}
+}
+
++ (BOOL) hashA:(NSString*) hashA isSmallerThanHashB: (NSString *) hashB
+{
+	if ([hashA isLessThan:hashB]) {
+		return true;
+	}
+	return false;
+}
+
+
 
 + (NSString *) getDocumentsDirectory {
 	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
@@ -45,9 +65,9 @@
 
 + (BOOL) replaceSymlinkAtPath: (NSString*) path
 {
-	NSLog(@"PATH: %@\n", path);
+	DebugLog(@"PATH: %@\n", path);
 	NSString * pointsTo = [[NSFileManager defaultManager] destinationOfSymbolicLinkAtPath:path error:nil];
-	NSLog(@"POINTS TO: %@\n", pointsTo);
+	DebugLog(@"POINTS TO: %@\n", pointsTo);
 	NSString * newPath;
 	
 	if (![pointsTo hasPrefix:@"/"])
@@ -60,14 +80,14 @@
 		newPath = pointsTo;
 	}
 	
-	NSLog(@"NEWPATH: %@\n", newPath);
+	DebugLog(@"NEWPATH: %@\n", newPath);
 	
 	NSError * error;
 	[[NSFileManager defaultManager] removeItemAtPath:path error:&error];
 	
 	if (error)
 	{
-		NSLog(@"ERROR 1: %@\n", error);
+		DebugLog(@"ERROR 1: %@\n", error);
 		return FALSE;
 	}
 	
@@ -84,7 +104,7 @@
 		// symlink contains an absolute path from
 		// a different system.
 		
-		NSLog(@"ERROR 2: %@\n", error);
+		DebugLog(@"ERROR 2: %@\n", error);
 		return FALSE;
 	}
 	return TRUE;
@@ -104,7 +124,7 @@
 		{
 			continueScanning = FALSE;
 			NSArray * initialscan = [FileHelper scanDirectoryRecursive:[NSURL fileURLWithPath:path]];
-
+			
 			for (NSURL * u in initialscan)
 			{
 				if ([FileHelper isSymbolicLink:[u path]])
@@ -144,7 +164,7 @@
 {
 	@autoreleasepool
 	{
-		// NSLog(@"FUNKTION: scanDirectoryRecursive");
+		// DebugLog(@"FUNKTION: scanDirectoryRecursive");
 		
 		NSMutableArray * filelist = [[NSMutableArray alloc] init];
 		
@@ -154,7 +174,7 @@
 			// Handle the error.
 			// Return YES if the enumeration should continue after the error.
 			return YES;
-		   }];
+		}];
 		
 		for (NSURL *url in enumerator)
 		{
@@ -238,7 +258,7 @@
  * + (BOOL)setValue:(NSObject *)value forName:(NSString *)name onFile:(NSString *)filePath;
  * + (NSData *)getDataValueForName:(NSString *)name onFile:(NSString *)filePath;
  * + (NSDictionary *)getAllValuesOnFile:(NSString *)filePath;
- * 
+ *
  * Returns an NSDictionary with the extended Attributes
  * Before calling this function check with "hasExtendedAttributes"
  * if the file/folder really has extended Attributes
@@ -282,7 +302,7 @@
 		{
 			// UPDATE hash: length_attribute_name
 			NSString * attributeName = [[NSString alloc] initWithCString:pch encoding:NSUTF8StringEncoding];
-			//NSLog(@"attributeName: %@", attributeName);
+			//DebugLog(@"attributeName: %@", attributeName);
 			// Get xattr-attributes for attribute-name
 			size_t size_attr = getxattr([path cStringUsingEncoding:NSUTF8StringEncoding], pch, NULL, 1, 0, 0);
 			NSMutableData * attributeData = [[NSMutableData alloc] init];
@@ -338,7 +358,7 @@
 		
 		if (!fh)
 		{
-			NSLog(@"sha1OfFile failed");
+			DebugLog(@"sha1OfFile failed");
 			return nil;
 		}
 		
@@ -472,7 +492,7 @@
 	char addressBuffer[INET6_ADDRSTRLEN];
 	for (NSData *data in [netService addresses]) {
 		memset(addressBuffer, 0, INET6_ADDRSTRLEN);
-
+		
 		typedef union {
 			struct sockaddr sa;
 			struct sockaddr_in ipv4;
@@ -504,6 +524,28 @@
 }
 
 /**
+ * Copied from http://stackoverflow.com/a/2226623
+ */
+
++ (BOOL) removeAllFilesInDir:(NSString*)directory
+{
+	NSFileManager *fm = [NSFileManager defaultManager];
+	NSError *error = nil;
+	BOOL errorOccurred = FALSE;
+	for (NSString *file in [fm contentsOfDirectoryAtPath:directory error:&error])
+	{
+		BOOL success = [fm removeItemAtPath:[NSString stringWithFormat:@"%@/%@", directory, file] error:&error];
+		if (!success || error)
+		{
+			DebugLog(@"%@", error);
+			errorOccurred = TRUE;
+			// it failed.
+		}
+	}
+	return errorOccurred;
+}
+
+/**
  * Set attribute of a file
  * Copied from: http://senojsitruc.blogspot.ch/2012/01/getting-and-setting-files-extended.html
  */
@@ -522,12 +564,12 @@
 		length = [(NSData *)value length];
 	}
 	else {
-		NSLog(@"%s.. unsupported data type, %@", __PRETTY_FUNCTION__, NSStringFromClass([value class]));
+		DebugLog(@"%s.. unsupported data type, %@", __PRETTY_FUNCTION__, NSStringFromClass([value class]));
 		return FALSE;
 	}
 	
 	if (0 != (err = setxattr([filePath UTF8String], [name UTF8String], bytes, length, 0, 0))) {
-		NSLog(@"%s.. failed to setxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
+		DebugLog(@"%s.. failed to setxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
 	}
 	
 	return TRUE;
@@ -543,7 +585,7 @@
 	void *buffer[4096];
 	
 	if (0 > (size = getxattr([filePath UTF8String], [name UTF8String], buffer, sizeof(buffer), 0, 0)) || size > sizeof(buffer)) {
-		NSLog(@"%s.. failed to getxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
+		DebugLog(@"%s.. failed to getxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
 		return nil;
 	}
 	
@@ -563,7 +605,7 @@
 	if (0 > (size = listxattr([filePath UTF8String], buffer, sizeof(buffer), 00))
 	    || size > sizeof(buffer))
 	{
-		NSLog(@"%s.. failed to listxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
+		DebugLog(@"%s.. failed to listxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
 		return nil;
 	}
 	

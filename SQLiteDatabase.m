@@ -25,14 +25,14 @@
 	if ( self = [super init] )
 	{
 		// Try opening the database-connection
-		//------------------------------------
+		//-------------------------------------
 		int retval = sqlite3_open([path UTF8String], &sqliteConnection);
 		
 		// Handle Error (and return)
-		//--------------------------
+		//---------------------------
 		if (retval != SQLITE_OK)
 		{
-			NSLog(@"[SQLITE] Unable to open database!");
+			DebugLog(@"[SQLITE] Unable to open database!");
 			return nil; // if it fails, return nil obj
 		}
 	}
@@ -60,7 +60,7 @@
 	int retval = sqlite3_prepare_v2(sqliteConnection, [query UTF8String], -1, &stmt, NULL);
 	
 	// Handle Error (and return)
-	//--------------------------
+	//---------------------------
 	if ( retval != SQLITE_OK )
 	{
 		NSString * errorString = [NSString stringWithFormat:@"[SQLITE] Error when preparing query!: %@", query];
@@ -69,7 +69,7 @@
 	}
 	
 	// Continue with SELECT (=No error)
-	//---------------------------------
+	//----------------------------------
 	NSMutableArray *result = [[NSMutableArray alloc] init];
 	while (sqlite3_step(stmt) == SQLITE_ROW)
 	{
@@ -101,7 +101,7 @@
 				}
 				else
 				{
-					NSLog(@"[SQLITE] UNKNOWN DATATYPE");
+					DebugLog(@"[SQLITE] UNKNOWN DATATYPE");
 				}
 				if (value != nil)
 				{

@@ -14,6 +14,8 @@
 @implementation FSWatcher
 {
 	FSEventStreamRef eeventStream;
+	int flags;
+	BOOL isWatching;
 }
 
 
@@ -30,52 +32,22 @@
 	{
 		observeFiles = TRUE;
 		ignoreSelf = TRUE;
+		[self updateFlags];
+
+		isWatching = FALSE;
 	}
 	return self;
 }
 
-
-- (void) shouldObserveFiles: (BOOL) b
-{
-	observeFiles = b;
-	[self setPaths: trackedPaths];
-}
-
-- (void) shouldIgnoreSelf: (BOOL) b
-{
-	ignoreSelf = b;
-	[self setPaths: trackedPaths];
-}
-
-/*
- Stops, releases, recreates and restarts the FSEventStream
+/**
+ * PRIVATE FUNCTION
  */
-
-- (void) setPaths:(NSArray *) paths
+- (void) updateFlags
 {
-	// Stop and delete the previous FSWatcher
-	//---------------------------------------
-	
-	if ( [trackedPaths count] != 0 )
-	{
-		[self stopWatching];
-		FSEventStreamInvalidate(eeventStream);
-		FSEventStreamRelease(eeventStream);
-	}
-
-	// Check if "paths" is empty
-	//--------------------------
-	
-	if ( [paths count] == 0 )
-	{
-		return;
-	}
-	
 	// Switch between "Observe folders only" / "Observe Files and Folders"
 	// Set ignoreSelf-flag
 	//--------------------------------------------------------------------
-	
-	int flags = kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagWatchRoot;
+	flags = kFSEventStreamCreateFlagUseCFTypes|kFSEventStreamCreateFlagWatchRoot;
 	if (observeFiles)
 	{
 		flags |= kFSEventStreamCreateFlagFileEvents;
@@ -84,52 +56,86 @@
 	{
 		flags |= kFSEventStreamCreateFlagIgnoreSelf;
 	}
-	
-	// Recreate the FSEventStream
-	//---------------------------
-	
-	trackedPaths = paths;
-	CFTimeInterval latency = 0.2;
-	FSEventStreamContext context = {0,(__bridge void *)self,NULL,NULL,NULL};
-	eeventStream = FSEventStreamCreate(kCFAllocatorDefault,&callback,&context,(__bridge CFArrayRef)trackedPaths,kFSEventStreamEventIdSinceNow,latency, flags);
-	
-	// Restart the FSEventStream
-	//--------------------------
-	
-	[self startWatching];
 }
 
+- (void) shouldObserveFiles: (BOOL) b
+{
+	observeFiles = b;
+	[self updateFlags];
+}
 
+- (void) shouldIgnoreSelf: (BOOL) b
+{
+	ignoreSelf = b;
+	[self updateFlags];
+}
 
-/**
- * Schedules the Watcher in den mainRunLoop
- * and starts the stream
- */
+- (void) setPaths:(NSArray *) paths
+{
+	trackedPaths = paths;
+}
+
 - (void) startWatching
 {
-	//NSLog(@"Watcher started: %@",trackedPaths);
+	if (isWatching)
+	{
+		[self stopWatching];
+	}
+	
+	// Check if "paths" is empty
+	//--------------------------
+	if ( [trackedPaths count] == 0 )
+	{
+		isWatching = FALSE;
+		return;
+	}
+		
+	CFTimeInterval latency = 0.2;
+	FSEventStreamContext context = {0,(__bridge void *)self,NULL,NULL,NULL};
+	
+
+	// 1. Step in FSEventsStream-Lifecycle: FSEventStreamCreate
+	//----------------------------------------------------------
+	eeventStream = FSEventStreamCreate(kCFAllocatorDefault,&callback,&context,CFBridgingRetain(trackedPaths),kFSEventStreamEventIdSinceNow,latency, flags);
+	
+	// 2. Step in FSEventsStream-Lifecycle: FSEventStreamScheduleWithRunLoop
+	//-----------------------------------------------------------------------
 	FSEventStreamScheduleWithRunLoop(eeventStream,[[NSRunLoop mainRunLoop] getCFRunLoop],kCFRunLoopDefaultMode);
+	
+	// 3. Step in FSEventsStream-Lifecycle: FSEventStreamStart
+	//---------------------------------------------------------
 	FSEventStreamStart(eeventStream);
+	
+	isWatching = TRUE;
+	
 }
 
-
-
-/**
- * Removes the "FSEventStreamRef
- * eeventStream" from the mainRunLoop.
- */
 - (void) stopWatching
 {
-	//NSLog(@"Watcher is no longer watching the directorie(s)");
+	if (!isWatching)
+	{
+		return;
+	}
+
+	// 4. Step in FSEventsStream-Lifecycle: FSEventStreamStop
+	//--------------------------------------------------------
 	FSEventStreamStop(eeventStream);
-	FSEventStreamUnscheduleFromRunLoop(eeventStream, [[NSRunLoop mainRunLoop] getCFRunLoop],kCFRunLoopDefaultMode);
+	
+	// 5. Step in FSEventsStream-Lifecycle: FSEventStreamInvalidate
+	//--------------------------------------------------------------
+	FSEventStreamInvalidate(eeventStream);
+	
+	// 6. Step in FSEventsStream-Lifecycle: FSEventStreamRelease
+	//-----------------------------------------------------------
+	FSEventStreamRelease(eeventStream);
+	
+	isWatching = FALSE;
 }
 
 
 
 /**
- * callback for FSEvents set in
- * "initWithPaths"
+ *
  */
 static void callback(ConstFSEventStreamRef streamRef,
 				 void *clientCallBackInfo,
@@ -139,13 +145,11 @@ static void callback(ConstFSEventStreamRef streamRef,
 				 const FSEventStreamEventId eventIds[])
 {
 	// First, make a copy of the event path so we can modify it.
-	//----------------------------------------------------------
-	
+	//-----------------------------------------------------------
 	NSArray * paths = (__bridge NSArray *)(eventPaths);
-
-	// Loop through all FSEvents
-	//--------------------------
 	
+	// Loop through all FSEvents
+	//---------------------------
 	for ( int i = 0 ; i < numEvents ; i++ )
 	{
 		/* Single & means BITWISE AND
@@ -158,7 +162,7 @@ static void callback(ConstFSEventStreamRef streamRef,
 		{
 			NSURL * u = [NSURL fileURLWithPath:[paths objectAtIndex:i] isDirectory:YES];
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"fsWatcherEventIsDir" object:u];
-
+			
 		}
 		else if (eventFlags[i] & kFSEventStreamEventFlagItemIsFile)
 		{
@@ -176,11 +180,11 @@ static void callback(ConstFSEventStreamRef streamRef,
 			// Filter out .DS_Store Files
 			//---------------------------
 			if (![[[paths objectAtIndex:i] lastPathComponent] isEqualToString:@".DS_Store"])
-				{
-					NSURL * u = [NSURL fileURLWithPath:[paths objectAtIndex:i]];
-					[[NSNotificationCenter defaultCenter] postNotificationName:@"fsWatcherEventIsSymlink" object:u];
-				}
-				
+			{
+				NSURL * u = [NSURL fileURLWithPath:[paths objectAtIndex:i]];
+				[[NSNotificationCenter defaultCenter] postNotificationName:@"fsWatcherEventIsSymlink" object:u];
+			}
+			
 		}
 		else if ( eventFlags[i] & kFSEventStreamEventFlagMustScanSubDirs )
 		{
@@ -192,7 +196,7 @@ static void callback(ConstFSEventStreamRef streamRef,
 			{
 				printf("REALLY BAD NEWS! The kernel dropped events.\n");
 			}
-			
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"fsWatcherEventMustScanSubDirs" object:nil];
 		}
 		else if (eventFlags[i] & kFSEventStreamEventFlagRootChanged)
 		{

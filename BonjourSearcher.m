@@ -128,7 +128,7 @@
 }
 
 
-- (NSNetService*) getNetServiceWithName: (NSString*) name
+- (NSNetService*) getNetServiceForName: (NSString*) name
 {
 	for (NSNetService * ns in resolvedServices)
 	{
