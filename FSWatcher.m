@@ -1,8 +1,3 @@
-/**
- * VERSION:	1.00
- * AUTHOR:	Daniel Forrer
- * FEATURES:
- */
 
 // HEADER
 #import "FSWatcher.h"
@@ -13,18 +8,17 @@
 
 @implementation FSWatcher
 {
-	FSEventStreamRef eeventStream;
+	FSEventStreamRef streamRef;
 	int flags;
-	BOOL isWatching;
 }
 
 
 
-@synthesize trackedPaths, observeFiles, ignoreSelf;
+@synthesize watchedPaths, observeFiles, ignoreSelf, isWatching;
 
 
-/*
- Initializer
+/**
+ * Initializer
  */
 - (id) init
 {
@@ -38,6 +32,7 @@
 	}
 	return self;
 }
+
 
 /**
  * PRIVATE FUNCTION
@@ -72,7 +67,7 @@
 
 - (void) setPaths:(NSArray *) paths
 {
-	trackedPaths = paths;
+	watchedPaths = paths;
 }
 
 - (void) startWatching
@@ -84,7 +79,7 @@
 	
 	// Check if "paths" is empty
 	//--------------------------
-	if ( [trackedPaths count] == 0 )
+	if ( [watchedPaths count] == 0 )
 	{
 		isWatching = FALSE;
 		return;
@@ -96,15 +91,15 @@
 
 	// 1. Step in FSEventsStream-Lifecycle: FSEventStreamCreate
 	//----------------------------------------------------------
-	eeventStream = FSEventStreamCreate(kCFAllocatorDefault,&callback,&context,CFBridgingRetain(trackedPaths),kFSEventStreamEventIdSinceNow,latency, flags);
+	streamRef = FSEventStreamCreate(kCFAllocatorDefault,&callback,&context,CFBridgingRetain(watchedPaths),kFSEventStreamEventIdSinceNow,latency, flags);
 	
 	// 2. Step in FSEventsStream-Lifecycle: FSEventStreamScheduleWithRunLoop
 	//-----------------------------------------------------------------------
-	FSEventStreamScheduleWithRunLoop(eeventStream,[[NSRunLoop mainRunLoop] getCFRunLoop],kCFRunLoopDefaultMode);
+	FSEventStreamScheduleWithRunLoop(streamRef,[[NSRunLoop mainRunLoop] getCFRunLoop],kCFRunLoopDefaultMode);
 	
 	// 3. Step in FSEventsStream-Lifecycle: FSEventStreamStart
 	//---------------------------------------------------------
-	FSEventStreamStart(eeventStream);
+	FSEventStreamStart(streamRef);
 	
 	isWatching = TRUE;
 	
@@ -119,15 +114,15 @@
 
 	// 4. Step in FSEventsStream-Lifecycle: FSEventStreamStop
 	//--------------------------------------------------------
-	FSEventStreamStop(eeventStream);
+	FSEventStreamStop(streamRef);
 	
 	// 5. Step in FSEventsStream-Lifecycle: FSEventStreamInvalidate
 	//--------------------------------------------------------------
-	FSEventStreamInvalidate(eeventStream);
+	FSEventStreamInvalidate(streamRef);
 	
 	// 6. Step in FSEventsStream-Lifecycle: FSEventStreamRelease
 	//-----------------------------------------------------------
-	FSEventStreamRelease(eeventStream);
+	FSEventStreamRelease(streamRef);
 	
 	isWatching = FALSE;
 }
@@ -135,7 +130,7 @@
 
 
 /**
- *
+ * Callback function
  */
 static void callback(ConstFSEventStreamRef streamRef,
 				 void *clientCallBackInfo,

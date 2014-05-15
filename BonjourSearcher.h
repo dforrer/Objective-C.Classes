@@ -13,6 +13,13 @@
 
 #endif
 
+@protocol BonjourSearcherDelegate <NSObject>
+
+- (void) bonjourSearcherServiceResolved:(NSNetService*)n;
+- (void) bonjourSearcherServiceRemoved:(NSNetService*)n;
+
+@end
+
 
 
 @interface BonjourSearcher : NSObject <NSNetServiceBrowserDelegate, NSNetServiceDelegate>
@@ -25,7 +32,7 @@
 
 @property (nonatomic,readonly,strong) NSMutableArray * resolvedServices;
 @property (nonatomic,readonly,strong) NSString * myServiceName;
-
+@property (nonatomic,assign) id<BonjourSearcherDelegate> delegate;
 
 - (id) initWithServiceType: (NSString *) type
 			  andDomain: (NSString *) domain;

@@ -19,6 +19,7 @@
 
 @synthesize resolvedServices;
 @synthesize myServiceName;
+@synthesize delegate;
 
 /**
  * Initializer
@@ -49,7 +50,7 @@
  */
 - (id) initWithServiceType: (NSString *) type
 			  andDomain: (NSString *) domain
-		andMyName: (NSString *) name
+			  andMyName: (NSString *) name
 {
 	if ((self = [super init]))
 	{
@@ -91,6 +92,8 @@
 	}
 }
 
+
+
 /**
  * OVERRIDE
  */
@@ -105,8 +108,11 @@
 		[services removeObject:aNetService];
 		[resolvedServices removeObject:aNetService];
 		[self didChangeValueForKey:@"services"];
+		[delegate bonjourSearcherServiceRemoved:aNetService];
 	}
 }
+
+
 
 /**
  * OVERRIDE: NSNetServiceDelegate
@@ -115,7 +121,10 @@
 {
 	DebugLog(@"BonjourServiceSearcher: didResolveService: \nname: %@, \nhostname: %@",[aNetService name], [aNetService hostName]);
 	[resolvedServices addObject:aNetService];
+	[delegate bonjourSearcherServiceResolved:aNetService];
 }
+
+
 
 /**
  * OVERRIDE: NSNetServiceDelegate
