@@ -30,7 +30,7 @@
  * services 
  */
 
-@property (nonatomic,readonly,strong) NSMutableArray * resolvedServices;
+@property (nonatomic,readonly,strong) NSMutableDictionary * resolvedServices;
 @property (nonatomic,readonly,strong) NSString * myServiceName;
 @property (nonatomic,assign) id<BonjourSearcherDelegate> delegate;
 

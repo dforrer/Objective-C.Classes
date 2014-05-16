@@ -31,7 +31,7 @@
 	{
 		DebugLog(@"BonjourServiceSearcher: init");
 		services = [[NSMutableArray alloc] init];
-		resolvedServices = [[NSMutableArray alloc] init];
+		resolvedServices = [[NSMutableDictionary alloc] init];
 		serviceBrowser = [[NSNetServiceBrowser alloc] init];
 		myServiceName = [[NSHost currentHost] localizedName];
 		DebugLog(@"myServiceName: %@", myServiceName);
@@ -52,21 +52,9 @@
 			  andDomain: (NSString *) domain
 			  andMyName: (NSString *) name
 {
-	if ((self = [super init]))
-	{
-		DebugLog(@"BonjourServiceSearcher: init");
-		services = [[NSMutableArray alloc] init];
-		resolvedServices = [[NSMutableArray alloc] init];
-		serviceBrowser	= [[NSNetServiceBrowser alloc] init];
-		myServiceName = name;
-		DebugLog(@"myServiceName: %@", myServiceName);
-		[serviceBrowser setDelegate:self];
-		/*
-		 The following line would search for all bonjour services:
-		 [serviceBrowser searchForServicesOfType:@"_services._dns-sd._udp." inDomain:@""];
-		 */
-		[serviceBrowser searchForServicesOfType: type inDomain: domain];
-	}
+	self = [self initWithServiceType:type andDomain:domain];
+	myServiceName = name;
+	
 	return self;
 }
 
@@ -106,7 +94,7 @@
 		DebugLog(@"BonjourServiceSearcher: didRemoveService");
 		[self willChangeValueForKey:@"services"];
 		[services removeObject:aNetService];
-		[resolvedServices removeObject:aNetService];
+		[resolvedServices removeObjectForKey:[aNetService name]];
 		[self didChangeValueForKey:@"services"];
 		[delegate bonjourSearcherServiceRemoved:aNetService];
 	}
@@ -120,7 +108,7 @@
 - (void) netServiceDidResolveAddress: (NSNetService *)aNetService
 {
 	DebugLog(@"BonjourServiceSearcher: didResolveService: \nname: %@, \nhostname: %@",[aNetService name], [aNetService hostName]);
-	[resolvedServices addObject:aNetService];
+	[resolvedServices setObject:aNetService forKey:[aNetService name]];
 	[delegate bonjourSearcherServiceResolved:aNetService];
 }
 
@@ -139,14 +127,7 @@
 
 - (NSNetService*) getNetServiceForName: (NSString*) name
 {
-	for (NSNetService * ns in resolvedServices)
-	{
-		if ([[ns name] isEqualToString:name])
-		{
-			return ns;
-		}
-	}
-	return nil;
+	return [resolvedServices objectForKey:name];
 }
 
 
