@@ -45,6 +45,6 @@
 + (BOOL)setValue:(NSObject *)value forName:(NSString *)name onFile:(NSString *)filePath;
 + (NSData *)getDataValueForName:(NSString *)name onFile:(NSString *)filePath;
 + (NSDictionary *)getAllValuesOnFile:(NSString *)filePath;
-
++ (void) removeAllValuesOnFile:(NSString *)filePath;
 
 @end
