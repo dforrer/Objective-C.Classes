@@ -1,5 +1,5 @@
 /**
- * VERSION:	1.41
+ * VERSION:	1.42
  * AUTHOR:	Daniel Forrer
  * FEATURES:
  */
@@ -17,7 +17,8 @@
 
 @interface FileHelper : NSObject
 
-+ (void) setFilePermissionsTo777: (NSString*) filepath;
+
++ (void) setFilePermissionsAtPath:(NSString*)path toOctal:(int)oct;
 + (BOOL) hashA:(NSString*) hashA isSmallerThanHashB: (NSString *) hashB;
 + (NSString *) getDocumentsDirectory;
 + (BOOL) isSymbolicLink: (NSString*) path;
@@ -25,6 +26,7 @@
 + (void) removeSymlinksRecursiveAtPath:(NSString*) path; // UNTESTED
 + (BOOL) hasExtendedAttributes:(NSString *) path;
 + (BOOL) fileFolderExists: (NSString *) path;
++ (BOOL) fileFolderSymlinkExists: (NSString *)path;
 + (BOOL) isDirectory: (NSString *) path;
 + (NSArray *) scanDirectory: (NSURL *) u;
 + (NSArray *) scanDirectoryRecursive: (NSURL *) u;
@@ -41,10 +43,11 @@
 + (NSString*) getIPv4FromNetService:(NSNetService*)netService;
 + (NSFileHandle*) fileForWritingAtPath: (NSString*) path;
 + (BOOL) removeAllFilesInDir:(NSString*)path;
-// Get and Set extended attrbutes of files
+// Get and Set extended attributes of files
 + (BOOL)setValue:(NSObject *)value forName:(NSString *)name onFile:(NSString *)filePath;
 + (NSData *)getDataValueForName:(NSString *)name onFile:(NSString *)filePath;
 + (NSDictionary *)getAllValuesOnFile:(NSString *)filePath;
 + (void) removeAllValuesOnFile:(NSString *)filePath;
++ (NSString*) getSymlinkDestination:(NSString*) path;
 
 @end

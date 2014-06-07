@@ -1,5 +1,5 @@
 /**
- * VERSION:	1.41
+ * VERSION:	1.42
  * AUTHOR:	Daniel Forrer
  * FEATURES:
  */
@@ -13,22 +13,80 @@
 #include <sys/stat.h>
 
 
+
 @implementation FileHelper
 
-+ (void) setFilePermissionsTo777: (NSString*) filepath
+/**
+ * Unused
+ */
+
++ (void) setFilePermissionsTo755:(NSString*) path
 {
+	mode_t dirMask = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+	chmod([path cStringUsingEncoding:NSUTF8StringEncoding], dirMask);
+}
+
+
+
++ (void) setFilePermissionsAtPath:(NSString*)path toOctal:(int)oct
+{
+	// Convert octal to decimal
+	//--------------------------
+	int dec = octal_decimal(oct);
+	
 	NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
-	[dict setObject:[NSNumber numberWithInt:511]  forKey:NSFilePosixPermissions]; /*511 is Decimal for the 777 octal*/
+	[dict setObject:[NSNumber numberWithInt:dec]  forKey:NSFilePosixPermissions];
+	/* 493 is Decimal for the 755 octal */
+	/* 511 is Decimal for the 777 octal */
 	NSError *error1;
-	[[NSFileManager defaultManager] setAttributes:dict ofItemAtPath:filepath error:&error1];
+	[[NSFileManager defaultManager] setAttributes:dict ofItemAtPath:path error:&error1];
 	if (error1) {
 		DebugLog(@"setFilePermissionsTo777: %@", error1);
 	}
 }
 
+
+
+/**
+ * Function to convert decimal to octal
+ */
+
+int decimal_octal(int n)
+{
+	int rem, i=1, octal=0;
+	while (n!=0)
+	{
+		rem=n%8;
+		n/=8;
+		octal+=rem*i;
+		i*=10;
+	}
+	return octal;
+}
+
+
+
+/**
+ * Function to convert octal to decimal
+ */
+
+int octal_decimal(int n)
+{
+	int decimal=0, i=0, rem;
+	while (n!=0)
+	{
+		rem = n%10;
+		n/=10;
+		decimal += rem*pow(8,i);
+		++i;
+	}
+	return decimal;
+}
+
 + (BOOL) hashA:(NSString*) hashA isSmallerThanHashB: (NSString *) hashB
 {
-	if ([hashA isLessThan:hashB]) {
+	if ([hashA isLessThan:hashB])
+	{
 		return true;
 	}
 	return false;
@@ -36,7 +94,8 @@
 
 
 
-+ (NSString *) getDocumentsDirectory {
++ (NSString*) getDocumentsDirectory
+{
 	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
 											   NSUserDomainMask,
 											   YES);
@@ -44,16 +103,20 @@
 }
 
 
+
 /**
  * Returns TRUE if 'path' points to a symbolic link
  */
 
-+ (BOOL) isSymbolicLink: (NSString*) path {
-	if ([[[[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil] fileType] isEqualToString:@"NSFileTypeSymbolicLink"]) {
++ (BOOL) isSymbolicLink:(NSString*)path
+{
+	if ([[[[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil] fileType] isEqualToString:@"NSFileTypeSymbolicLink"])
+	{
 		return TRUE;
 	}
 	return FALSE;
 }
+
 
 
 /**
@@ -111,6 +174,7 @@
 }
 
 
+
 /**
  * UNTESTED
  */
@@ -138,6 +202,7 @@
 }
 
 
+
 /**
  * Returns an Array of NSURLs
  * Keys allow us to precache information
@@ -153,6 +218,7 @@
 		return filelist;
 	}
 }
+
 
 
 /**
@@ -193,12 +259,15 @@
  * which is being returned in the 'NSPropertyListXMLFormat_v1_0'
  */
 
-+ (NSData*) dictionaryToXMLData: (NSDictionary *) dict {
++ (NSData*) dictionaryToXMLData:(NSDictionary*)dict
+{
 	// convert dict to nsdata
-	@autoreleasepool {
+	@autoreleasepool
+	{
 		NSError *error;
 		NSData *data = [NSPropertyListSerialization dataWithPropertyList:dict format: NSPropertyListXMLFormat_v1_0 options:0 error:&error];
-		if (data == nil) {
+		if (data == nil)
+		{
 			NSLog (@"error serializing to xml: %@", error);
 			return nil;
 		}
@@ -207,12 +276,15 @@
 }
 
 
+
 /**
  * Calculates the SHA1-Hash of the NSData data
  */
 
-+ (NSString *) sha1OfNSData: (NSData*) data {
-	@autoreleasepool {
++ (NSString*) sha1OfNSData:(NSData*)data
+{
+	@autoreleasepool
+	{
 		CC_SHA1_CTX state;
 		CC_SHA1_Init(&state);
 		CC_SHA1_Update( &state , [data bytes] , (int) [data length] );
@@ -222,7 +294,8 @@
 		
 		NSMutableString *output = [NSMutableString stringWithCapacity: CC_SHA1_DIGEST_LENGTH * 2];
 		
-		for (int i = 0; i < CC_SHA1_DIGEST_LENGTH; i++) {
+		for (int i = 0; i < CC_SHA1_DIGEST_LENGTH; i++)
+		{
 			[output appendFormat:@"%02x", digest[i]];
 		}
 		return output;
@@ -264,7 +337,7 @@
  * if the file/folder really has extended Attributes
  */
 
-+ (NSMutableDictionary*) extendedAttrAsDictAtPath: (NSString *)path
++ (NSMutableDictionary*) extendedAttrAsDictAtPath:(NSString*)path
 {
 	@autoreleasepool
 	{
@@ -345,11 +418,12 @@
 }
 
 
+
 /**
  * Calculates the SHA1-Hash of the File at path
  */
 
-+ (NSString *) sha1OfFile: (NSString *)path
++ (NSString*) sha1OfFile:(NSString*)path
 {
 	@autoreleasepool
 	{
@@ -392,12 +466,15 @@
 }
 
 
+
 /**
  * Returns TRUE if the file at 'path' is a directory
  */
 
-+ (BOOL) isDirectory: (NSString *)path {
-	@autoreleasepool {
++ (BOOL) isDirectory:(NSString*)path
+{
+	@autoreleasepool
+	{
 		BOOL isDir;
 		[[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDir];
 		return isDir;
@@ -405,12 +482,14 @@
 }
 
 
+
 /**
  * Returns the File-Modification time of the file/folder at 'path'
  * as a long long (=int64_t)
  */
 
-+ (long long) fileModTimeAsLongLongAtPath: (NSString *)path {
++ (long long) fileModTimeAsLongLongAtPath: (NSString *)path
+{
 	/* works with files and folders */
 	struct stat buf;
 	stat([path cStringUsingEncoding:NSUTF8StringEncoding], &buf);
@@ -418,15 +497,19 @@
 }
 
 
-+ (NSString *) sha1OfNSString: (NSString *)str {
-	@autoreleasepool {
+
++ (NSString*) sha1OfNSString:(NSString*)str
+{
+	@autoreleasepool
+	{
 		CC_SHA1_CTX state;
 		CC_SHA1_Init(&state);
 		CC_SHA1_Update( &state , [str cStringUsingEncoding:NSUTF8StringEncoding] , (int) [str length] );
 		uint8_t digest[ CC_SHA1_DIGEST_LENGTH ];
 		CC_SHA1_Final( digest , &state );
 		NSMutableString *output = [NSMutableString stringWithCapacity: CC_SHA1_DIGEST_LENGTH * 2];
-		for (int i = 0; i < CC_SHA1_DIGEST_LENGTH; i++) {
+		for (int i = 0; i < CC_SHA1_DIGEST_LENGTH; i++)
+		{
 			[output appendFormat:@"%02x", digest[i]];
 		}
 		return output;
@@ -434,15 +517,18 @@
 }
 
 
-+ (NSString *) sha512OfNSString: (NSString *)str {
-	@autoreleasepool {
++ (NSString *) sha512OfNSString:(NSString*)str
+{
+	@autoreleasepool
+	{
 		CC_SHA512_CTX state;
 		CC_SHA512_Init(&state);
 		CC_SHA512_Update( &state , [str cStringUsingEncoding:NSUTF8StringEncoding] , (int) [str length] );
 		uint8_t digest[ CC_SHA512_DIGEST_LENGTH ];
 		CC_SHA512_Final( digest , &state );
 		NSMutableString *output = [NSMutableString stringWithCapacity: CC_SHA512_DIGEST_LENGTH * 2];
-		for (int i = 0; i < CC_SHA512_DIGEST_LENGTH; i++) {
+		for (int i = 0; i < CC_SHA512_DIGEST_LENGTH; i++)
+		{
 			[output appendFormat:@"%02x", digest[i]];
 		}
 		return output;
@@ -450,16 +536,38 @@
 }
 
 
-+ (BOOL) fileFolderExists: (NSString *)path {
+
+/**
+ * If path points to a symlink, the result represents 
+ * the existence of the linked file and not the symlink itself
+ */
++ (BOOL) fileFolderExists: (NSString *)path
+{
 	// Works with both Folders and Files
 	struct stat   buf;
 	return (stat([path cStringUsingEncoding:NSUTF8StringEncoding], &buf) == 0);
 }
 
 
-+ (NSData *) createRandomNSDataOfSize: (unsigned long)size {
+
+/**
+ * Returns a boolean value on wheter a
+ * file, folder or symlink exists at 'path'
+ */
++ (BOOL) fileFolderSymlinkExists: (NSString *)path
+{
+	// Works with both Folders and Files
+	struct stat   buf;
+	return (lstat([path cStringUsingEncoding:NSUTF8StringEncoding], &buf) == 0);
+}
+
+
+
++ (NSData *) createRandomNSDataOfSize: (unsigned long)size
+{
 	NSMutableData* theData = [NSMutableData dataWithCapacity:size];
-	for( unsigned int i = 0 ; i < size/4 ; ++i )	{
+	for( unsigned int i = 0 ; i < size/4 ; ++i )
+	{
 		u_int32_t randomBits = arc4random();
 		[theData appendBytes:(void*)&randomBits length:4];
 	}
@@ -467,7 +575,9 @@
 }
 
 
-+ (NSString *) createRandomNSStringOfSize: (unsigned int) numOfChars {
+
++ (NSString *) createRandomNSStringOfSize: (unsigned int) numOfChars
+{
 	char data[numOfChars];
 	for (int x=0;x<numOfChars;data[x++] = (char)('A' + (arc4random_uniform(26))));
 	return [[NSString alloc] initWithBytes: data
@@ -476,10 +586,12 @@
 }
 
 
-+ (BOOL) URL:(NSURL*) one hasAsRootURL: (NSURL*) two {
++ (BOOL) URL:(NSURL*)one hasAsRootURL:(NSURL*)two
+{
 	NSString * urlOneStr = [one absoluteString];
 	NSString * urlTwoStr = [two absoluteString];
-	if ([urlOneStr length] < [urlTwoStr length]) {
+	if ([urlOneStr length] < [urlTwoStr length])
+	{
 		return FALSE;
 	}
 	NSString * cmp = [urlOneStr substringToIndex:[urlTwoStr length]];
@@ -487,24 +599,29 @@
 }
 
 
-+ (NSString*) getIPv4FromNetService:(NSNetService*)netService {
++ (NSString*) getIPv4FromNetService:(NSNetService*)netService
+{
 	// Resolve ip
 	char addressBuffer[INET6_ADDRSTRLEN];
-	for (NSData *data in [netService addresses]) {
+	for (NSData *data in [netService addresses])
+	{
 		memset(addressBuffer, 0, INET6_ADDRSTRLEN);
 		
-		typedef union {
+		typedef union
+		{
 			struct sockaddr sa;
 			struct sockaddr_in ipv4;
 			struct sockaddr_in6 ipv6;
 		} ip_socket_address;
 		
 		ip_socket_address *socketAddress = (ip_socket_address *)[data bytes];
-		if (socketAddress && (socketAddress->sa.sa_family == AF_INET)) {
+		if (socketAddress && (socketAddress->sa.sa_family == AF_INET))
+		{
 			const char *addressStr = inet_ntop(socketAddress->sa.sa_family,			   (socketAddress->sa.sa_family == AF_INET ? (void *)&(socketAddress->ipv4.sin_addr) : (void *)&(socketAddress->ipv6.sin6_addr)), addressBuffer,sizeof(addressBuffer));
 			int port = ntohs(socketAddress->sa.sa_family == AF_INET ? socketAddress->ipv4.sin_port : socketAddress->ipv6.sin6_port);
 			
-			if (addressStr && port) {
+			if (addressStr && port)
+			{
 				NSString * urlAndPort = [NSString stringWithFormat:@"%s:%d", addressStr, port];
 				return urlAndPort;
 			}
@@ -514,14 +631,19 @@
 }
 
 
-+ (NSFileHandle*) fileForWritingAtPath: (NSString*) path {
+
++ (NSFileHandle*) fileForWritingAtPath: (NSString*) path
+{
 	NSFileHandle * h = [NSFileHandle fileHandleForWritingAtPath: path];	// NO creation call
-	if (h == nil) {
+	if (h == nil)
+	{
 		[[NSFileManager defaultManager] createFileAtPath: path contents: nil attributes: nil];
 		h = [NSFileHandle fileHandleForWritingAtPath: path];
 	}
 	return h;
 }
+
+
 
 /**
  * Copied from http://stackoverflow.com/a/2226623
@@ -534,7 +656,7 @@
 	BOOL errorOccurred = FALSE;
 	for (NSString *file in [fm contentsOfDirectoryAtPath:directory error:&error])
 	{
-		BOOL success = [fm removeItemAtPath:[NSString stringWithFormat:@"%@/%@", directory, file] error:&error];
+		BOOL success = [fm removeItemAtPath:[directory stringByAppendingPathComponent:file] error:&error];
 		if (!success || error)
 		{
 			DebugLog(@"%@", error);
@@ -654,11 +776,21 @@
 		{
 			removexattr([filePath UTF8String], [name UTF8String], 0);
 		}
-		
+
 		bufferPtr += namelen + 1;
 		bufferNdx += namelen + 1;
 	}
 }
 
-
++ (NSString*) getSymlinkDestination:(NSString*) path
+{
+	char buf[MAXPATHLEN];
+	ssize_t len;
+	if ((len = readlink([path cStringUsingEncoding:NSUTF8StringEncoding], buf, sizeof(buf)-1)) != -1)
+	{
+		buf[len] = '\0';
+		return [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
+	}
+	return nil;
+}
 @end
