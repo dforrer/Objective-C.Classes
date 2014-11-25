@@ -1,17 +1,7 @@
 /**
- * VERSION:	1.03
  * AUTHOR:	Daniel Forrer
  * FEATURES:	Thread-safe
  */
-
-
-#ifdef __OBJC__
-
-#import <Cocoa/Cocoa.h>
-#define NSLog(FORMAT, ...) fprintf( stderr, "%s\n", [[NSString stringWithFormat:FORMAT, ##__VA_ARGS__] UTF8String] );
-#define DebugLog( s, ... ) NSLog( @"<%@:(%d)> \t%@", [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__] )
-
-#endif
 
 
 @interface SQLiteDatabase : NSObject

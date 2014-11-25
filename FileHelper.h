@@ -1,18 +1,7 @@
 /**
- * VERSION:	1.42
  * AUTHOR:	Daniel Forrer
  * FEATURES:
  */
-
-
-#ifdef __OBJC__
-
-#import <Cocoa/Cocoa.h>
-#define NSLog(FORMAT, ...) fprintf( stderr, "%s\n", [[NSString stringWithFormat:FORMAT, ##__VA_ARGS__] UTF8String] );
-#define DebugLog( s, ... ) NSLog( @"<%@:(%d)> \t%@", [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ##__VA_ARGS__] )
-
-#endif
-
 
 
 @interface FileHelper : NSObject
@@ -48,6 +37,7 @@
 + (NSData *)getDataValueForName:(NSString *)name onFile:(NSString *)filePath;
 + (NSDictionary *)getAllValuesOnFile:(NSString *)filePath;
 + (void) removeAllValuesOnFile:(NSString *)filePath;
++ (void) matchExtAttributes:(NSDictionary*)dict onURL:(NSURL*)url;
 + (NSString*) getSymlinkDestination:(NSString*) path;
 
 @end

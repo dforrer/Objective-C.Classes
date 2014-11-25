@@ -1,5 +1,4 @@
 /**
- * VERSION:	1.42
  * AUTHOR:	Daniel Forrer
  * FEATURES:
  */
@@ -31,7 +30,7 @@
 + (void) setFilePermissionsAtPath:(NSString*)path toOctal:(int)oct
 {
 	// Convert octal to decimal
-	//--------------------------
+
 	int dec = octal_decimal(oct);
 	
 	NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
@@ -41,7 +40,7 @@
 	NSError *error1;
 	[[NSFileManager defaultManager] setAttributes:dict ofItemAtPath:path error:&error1];
 	if (error1) {
-		DebugLog(@"setFilePermissionsTo777: %@", error1);
+		NSLog(@"setFilePermissionsAtPath: %@", error1);
 	}
 }
 
@@ -128,9 +127,9 @@ int octal_decimal(int n)
 
 + (BOOL) replaceSymlinkAtPath: (NSString*) path
 {
-	DebugLog(@"PATH: %@\n", path);
+	NSLog(@"PATH: %@\n", path);
 	NSString * pointsTo = [[NSFileManager defaultManager] destinationOfSymbolicLinkAtPath:path error:nil];
-	DebugLog(@"POINTS TO: %@\n", pointsTo);
+	NSLog(@"POINTS TO: %@\n", pointsTo);
 	NSString * newPath;
 	
 	if (![pointsTo hasPrefix:@"/"])
@@ -143,14 +142,14 @@ int octal_decimal(int n)
 		newPath = pointsTo;
 	}
 	
-	DebugLog(@"NEWPATH: %@\n", newPath);
+	NSLog(@"NEWPATH: %@\n", newPath);
 	
 	NSError * error;
 	[[NSFileManager defaultManager] removeItemAtPath:path error:&error];
 	
 	if (error)
 	{
-		DebugLog(@"ERROR 1: %@\n", error);
+		NSLog(@"ERROR 1: %@\n", error);
 		return FALSE;
 	}
 	
@@ -167,7 +166,7 @@ int octal_decimal(int n)
 		// symlink contains an absolute path from
 		// a different system.
 		
-		DebugLog(@"ERROR 2: %@\n", error);
+		NSLog(@"ERROR 2: %@\n", error);
 		return FALSE;
 	}
 	return TRUE;
@@ -230,7 +229,7 @@ int octal_decimal(int n)
 {
 	@autoreleasepool
 	{
-		// DebugLog(@"FUNKTION: scanDirectoryRecursive");
+		// NSLog(@"FUNKTION: scanDirectoryRecursive");
 		
 		NSMutableArray * filelist = [[NSMutableArray alloc] init];
 		
@@ -375,7 +374,7 @@ int octal_decimal(int n)
 		{
 			// UPDATE hash: length_attribute_name
 			NSString * attributeName = [[NSString alloc] initWithCString:pch encoding:NSUTF8StringEncoding];
-			//DebugLog(@"attributeName: %@", attributeName);
+			//NSLog(@"attributeName: %@", attributeName);
 			// Get xattr-attributes for attribute-name
 			size_t size_attr = getxattr([path cStringUsingEncoding:NSUTF8StringEncoding], pch, NULL, 1, 0, 0);
 			NSMutableData * attributeData = [[NSMutableData alloc] init];
@@ -432,7 +431,7 @@ int octal_decimal(int n)
 		
 		if (!fh)
 		{
-			DebugLog(@"sha1OfFile failed");
+			NSLog(@"sha1OfFile failed");
 			return nil;
 		}
 		
@@ -659,7 +658,7 @@ int octal_decimal(int n)
 		BOOL success = [fm removeItemAtPath:[directory stringByAppendingPathComponent:file] error:&error];
 		if (!success || error)
 		{
-			DebugLog(@"%@", error);
+			NSLog(@"%@", error);
 			errorOccurred = TRUE;
 			// it failed.
 		}
@@ -686,12 +685,12 @@ int octal_decimal(int n)
 		length = [(NSData *)value length];
 	}
 	else {
-		DebugLog(@"%s.. unsupported data type, %@", __PRETTY_FUNCTION__, NSStringFromClass([value class]));
+		NSLog(@"%s.. unsupported data type, %@", __PRETTY_FUNCTION__, NSStringFromClass([value class]));
 		return FALSE;
 	}
 	
 	if (0 != (err = setxattr([filePath UTF8String], [name UTF8String], bytes, length, 0, 0))) {
-		DebugLog(@"%s.. failed to setxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
+		NSLog(@"%s.. failed to setxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
 	}
 	
 	return TRUE;
@@ -707,7 +706,7 @@ int octal_decimal(int n)
 	void *buffer[4096];
 	
 	if (0 > (size = getxattr([filePath UTF8String], [name UTF8String], buffer, sizeof(buffer), 0, 0)) || size > sizeof(buffer)) {
-		DebugLog(@"%s.. failed to getxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
+		NSLog(@"%s.. failed to getxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
 		return nil;
 	}
 	
@@ -727,7 +726,7 @@ int octal_decimal(int n)
 	if (0 > (size = listxattr([filePath UTF8String], buffer, sizeof(buffer), 00))
 	    || size > sizeof(buffer))
 	{
-		DebugLog(@"%s.. failed to listxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
+		NSLog(@"%s.. failed to listxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
 		return nil;
 	}
 	
@@ -761,7 +760,7 @@ int octal_decimal(int n)
 	if (0 > (size = listxattr([filePath UTF8String], buffer, sizeof(buffer), 00))
 	    || size > sizeof(buffer))
 	{
-		DebugLog(@"%s.. failed to listxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
+		NSLog(@"%s.. failed to listxattr(%@), %s", __PRETTY_FUNCTION__, filePath, strerror(errno));
 		return;
 	}
 	
@@ -781,6 +780,25 @@ int octal_decimal(int n)
 		bufferNdx += namelen + 1;
 	}
 }
+
+
+/**
+ * Set extended attributes
+ * This works, but does not dispaly correctly in the Finder
+ * @params Expects a Base64-encoded string for the values
+ * of the extended attributes.
+ */
++ (void) matchExtAttributes:(NSDictionary*)dict onURL:(NSURL*)url
+{
+	[FileHelper removeAllValuesOnFile:[url path]];
+	
+	for (id key in dict)
+	{
+		NSData * extAttrBinary = [[NSData alloc] initWithBase64EncodedString:[dict objectForKey:key] options:0];
+		[FileHelper setValue:extAttrBinary forName:key onFile:[url path]];
+	}
+}
+
 
 + (NSString*) getSymlinkDestination:(NSString*) path
 {

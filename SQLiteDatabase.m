@@ -1,5 +1,4 @@
 /**
- * VERSION:	1.03
  * AUTHOR:	Daniel Forrer
  * FEATURES:	Thread-safe
  */
@@ -25,14 +24,14 @@
 	if ( self = [super init] )
 	{
 		// Try opening the database-connection
-		//-------------------------------------
+
 		int retval = sqlite3_open([path UTF8String], &sqliteConnection);
 		
 		// Handle Error (and return)
-		//---------------------------
+		
 		if (retval != SQLITE_OK)
 		{
-			DebugLog(@"[SQLITE] Unable to open database!");
+			NSLog(@"[SQLITE] Unable to open database!");
 			return nil; // if it fails, return nil obj
 		}
 	}
@@ -60,7 +59,7 @@
 	int retval = sqlite3_prepare_v2(sqliteConnection, [query UTF8String], -1, &stmt, NULL);
 	
 	// Handle Error (and return)
-	//---------------------------
+
 	if ( retval != SQLITE_OK )
 	{
 		NSString * errorString = [NSString stringWithFormat:@"[SQLITE] Error when preparing query!: %@", query];
@@ -69,7 +68,7 @@
 	}
 	
 	// Continue with SELECT (=No error)
-	//----------------------------------
+	
 	NSMutableArray *result = [[NSMutableArray alloc] init];
 	while (sqlite3_step(stmt) == SQLITE_ROW)
 	{
@@ -101,7 +100,7 @@
 				}
 				else
 				{
-					DebugLog(@"[SQLITE] UNKNOWN DATATYPE");
+					NSLog(@"[SQLITE] UNKNOWN DATATYPE");
 				}
 				if (value != nil)
 				{
@@ -128,7 +127,7 @@
 	int retval = sqlite3_exec(sqliteConnection,[query cStringUsingEncoding:NSUTF8StringEncoding],NULL,NULL,NULL);
 	
 	// Handle Error (and return)
-	//--------------------------
+	
 	if ( retval != SQLITE_OK )
 	{
 		NSString * errorString = [NSString stringWithFormat:@"[SQLITE] Error when executing query!: %@", query];
@@ -137,7 +136,7 @@
 	}
 	
 	// Continue (= No error)
-	//-----------------------
+	
 	return sqlite3_changes(sqliteConnection);
 }
 
