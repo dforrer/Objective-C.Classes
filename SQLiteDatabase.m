@@ -64,7 +64,7 @@
 	{
 		NSString * errorString = [NSString stringWithFormat:@"[SQLITE] Error when preparing query!: %@", query];
 		*error = [NSError errorWithDomain: errorString code:retval userInfo:nil];
-		return -1;
+		return 0;
 	}
 	
 	// Continue with SELECT (=No error)
@@ -132,7 +132,7 @@
 	{
 		NSString * errorString = [NSString stringWithFormat:@"[SQLITE] Error when executing query!: %@", query];
 		*error = [NSError errorWithDomain: errorString code:retval userInfo:nil];
-		return -1;
+		return 0;
 	}
 	
 	// Continue (= No error)

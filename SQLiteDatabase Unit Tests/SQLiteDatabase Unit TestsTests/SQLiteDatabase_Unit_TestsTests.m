@@ -89,5 +89,19 @@
 	XCTAssertTrue([rows count] == 0);
 }
 
+- (void) testNonsense
+{
+	NSError * error;
+	NSArray * rows;
+	
+	// Actual Test
+	//------------
+	long long rv = [db performQuery:@"bla bla bla" rows:&rows error:&error];
+	XCTAssertEqual(rv, (long long) 0, @"No rows should be changed");
+	XCTAssertNotNil(error, @"bla bla bla succeeded");
+	XCTAssertNil(rows, @"");
+	
+}
+
 
 @end
